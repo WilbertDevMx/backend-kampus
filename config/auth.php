@@ -20,6 +20,11 @@ return [
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
+    'allowed_email_domains' => array_values(array_filter(array_map(
+        static fn (string $domain): string => strtolower(trim($domain)),
+        explode(',', env('KAMPUS_ALLOWED_EMAIL_DOMAINS', '')),
+    ))),
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Guards
