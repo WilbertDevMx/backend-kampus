@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('matches', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_one_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('user_two_id')->constrained('users')->cascadeOnDelete();
+            $table->unique(['user_one_id', 'user_two_id']);
+            $table->index('user_two_id');
             $table->timestamps();
         });
     }

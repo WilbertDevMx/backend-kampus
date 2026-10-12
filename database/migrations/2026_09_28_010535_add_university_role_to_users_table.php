@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->foreignId('university_id')->nullable()->constrained()->restrictOnDelete();
+            $table->timestamp('suspended_at')->nullable();
+            $table->string('role', 20)->default('student')->index();
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->dropConstrainedForeignId('university_id');
+            $table->dropIndex(['role']);
+            $table->dropColumn(['suspended_at', 'role']);
         });
     }
 };

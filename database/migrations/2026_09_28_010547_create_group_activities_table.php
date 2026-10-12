@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('group_activities', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('group_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->string('location')->nullable();
+            $table->timestamp('starts_at');
+            $table->index(['group_id', 'starts_at']);
             $table->timestamps();
         });
     }

@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('university_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->string('category', 20);
+            $table->string('image_path')->nullable();
+            $table->index(['university_id', 'category']);
             $table->timestamps();
         });
     }

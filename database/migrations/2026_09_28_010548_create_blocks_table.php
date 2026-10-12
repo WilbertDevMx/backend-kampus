@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('blocks', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->foreignId('blocker_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('blocked_id')->constrained('users')->cascadeOnDelete();
+            $table->primary(['blocker_id', 'blocked_id']);
+            $table->index('blocked_id');
         });
     }
 

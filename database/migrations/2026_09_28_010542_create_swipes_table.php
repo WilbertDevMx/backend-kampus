@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('swipes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('swiper_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('swiped_id')->constrained('users')->cascadeOnDelete();
+            $table->boolean('liked');
+            $table->unique(['swiper_id', 'swiped_id']);
+            $table->index(['swiped_id', 'liked']);
             $table->timestamps();
         });
     }

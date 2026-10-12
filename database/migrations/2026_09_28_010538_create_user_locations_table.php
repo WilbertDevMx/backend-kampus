@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('user_locations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->string('geohash', 6)->index();
             $table->timestamps();
         });
     }

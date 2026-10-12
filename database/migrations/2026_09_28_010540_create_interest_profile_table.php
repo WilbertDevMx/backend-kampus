@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('interest_profile', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->foreignId('interest_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('profile_id')->constrained()->cascadeOnDelete();
+            $table->primary(['interest_id', 'profile_id']);
+            $table->index('profile_id');
         });
     }
 

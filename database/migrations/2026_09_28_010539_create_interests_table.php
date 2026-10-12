@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('interests', function (Blueprint $table) {
             $table->id();
+            $table->string('name', 60)->unique();
+            $table->string('category', 30);
             $table->timestamps();
         });
     }
