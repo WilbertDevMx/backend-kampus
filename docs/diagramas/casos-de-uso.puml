@@ -1,0 +1,112 @@
+@startuml casos-de-uso
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Arial
+skinparam usecase {
+  BackgroundColor #FFFBEA
+  BorderColor #8A6D00
+}
+skinparam package {
+  BorderColor #555555
+}
+
+title Kampus — Diagrama de casos de uso del MVP
+
+actor "Visitante" as V
+actor "Estudiante\nverificado" as E
+actor "Administrador" as A
+actor "Servicio de\ncorreo" as MAIL <<sistema>>
+actor "LiveKit" as LK <<sistema>>
+
+V <|-- E
+E <|-- A
+
+rectangle "Kampus" {
+  package "Cuenta" {
+    usecase "Registrarse con correo\ninstitucional (RF-01)" as UC01
+    usecase "Aceptar aviso de privacidad\ny normas de comunidad (RF-04)" as UC04
+    usecase "Verificar correo (RF-01)" as UC01V
+    usecase "Iniciar sesión (RF-02)" as UC02
+    usecase "Cerrar sesión (RF-02)" as UC02C
+    usecase "Eliminar cuenta (RF-16)" as UC16
+  }
+
+  package "Perfil" {
+    usecase "Gestionar perfil (RF-03)" as UC03
+    usecase "Elegir intereses (RF-03)" as UC03I
+    usecase "Subir fotos (RF-03)" as UC03F
+    usecase "Declarar zona y activar\n“Cerca de ti” (RF-18)" as UC18
+  }
+
+  package "Descubrimiento" {
+    usecase "Explorar perfiles\ntipo swipe (RF-05)" as UC05
+    usecase "Filtrar perfiles (RF-06)" as UC06
+    usecase "Ver perfil expandido (RF-21)" as UC21
+    usecase "Generar match (RF-07)" as UC07
+    usecase "Ver mapa “Cerca” (RF-19)" as UC19
+  }
+
+  package "Comunicación" {
+    usecase "Chatear con un match (RF-08)" as UC08
+    usecase "Enviar imagen (RF-09)" as UC09
+    usecase "Compartir ubicación (RF-20)" as UC20
+    usecase "Hacer videollamada\n1 a 1 (RF-10)" as UC10
+  }
+
+  package "Grupos" {
+    usecase "Explorar y unirse\na grupos (RF-11)" as UC11
+    usecase "Crear y administrar\ngrupo (RF-12)" as UC12
+    usecase "Publicar actividad (RF-12)" as UC12A
+  }
+
+  package "Seguridad y moderación" {
+    usecase "Bloquear usuario (RF-13)" as UC13
+    usecase "Reportar usuario (RF-14)" as UC14
+    usecase "Revisar reportes (RF-15)" as UC15
+    usecase "Suspender o reactivar\ncuenta (RF-15)" as UC15S
+  }
+}
+
+' Visitante: cualquier persona que todavía no inicia sesión
+V --> UC01
+V --> UC01V
+V --> UC02
+UC01 ..> UC04 : <<include>>
+UC01 --> MAIL
+
+' Estudiante verificado
+E --> UC02C
+E --> UC16
+E --> UC03
+E --> UC18
+E --> UC05
+E --> UC19
+E --> UC08
+E --> UC10
+E --> UC11
+E --> UC12
+E --> UC13
+E --> UC14
+
+UC03 ..> UC03I : <<include>>
+UC03 <.. UC03F : <<extend>>
+UC05 <.. UC06 : <<extend>>
+UC05 <.. UC21 : <<extend>>
+UC05 <.. UC07 : <<extend>>\n[me interesa mutuo]
+UC08 <.. UC09 : <<extend>>
+UC08 <.. UC20 : <<extend>>
+UC12 <.. UC12A : <<extend>>
+UC10 --> LK
+
+' Administrador
+A --> UC15
+UC15 <.. UC15S : <<extend>>
+
+legend right
+  Fuera del diagrama: RF-17 (notificaciones dentro de la app),
+  que es deseable y solo se implementa si el Sprint 5 tiene tiempo.
+  El Administrador hereda los casos del Estudiante verificado,
+  y este a su vez los del Visitante.
+endlegend
+@enduml
