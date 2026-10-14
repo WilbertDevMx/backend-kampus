@@ -45,7 +45,7 @@ class LoginApiTest extends TestCase
         $this->withToken($token)
             ->getJson('/api/user')
             ->assertOk()
-            ->assertJsonPath('email', 'alumno@utt.edu.mx');
+            ->assertJsonPath('data.email', 'alumno@utt.edu.mx');
     }
 
     public function test_email_is_matched_case_insensitively(): void

@@ -38,7 +38,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, bcmath, intl, pdo_pgsql, pdo_sqlite, sqlite3
+          extensions: mbstring, bcmath, intl, pdo_pgsql, pdo_sqlite, sqlite3, gd
           coverage: none
 
       - name: Caché de dependencias de Composer
@@ -50,6 +50,9 @@ jobs:
 
       - name: Instalar dependencias
         run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Revisar vulnerabilidades conocidas en dependencias
+        run: composer audit --no-interaction
 
       - name: Preparar el entorno
         run: |
