@@ -19,6 +19,13 @@ class InterestFactory extends Factory
     {
         return [
             'name' => fake()->unique()->word(),
+            'category' => fake()->randomElement([
+                'deportes',
+                'cultura',
+                'entretenimiento',
+                'academico',
+                'social',
+            ]),
         ];
     }
 }

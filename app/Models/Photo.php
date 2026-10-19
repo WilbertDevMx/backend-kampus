@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['profile_id', 'path', 'mime_type', 'size'])]
+#[Fillable(['profile_id', 'path', 'position'])]
 class Photo extends Model
 {
     /** @use HasFactory<PhotoFactory> */

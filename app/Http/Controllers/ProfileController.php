@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ProfileResource;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 
 class ProfileController extends Controller
 {
@@ -17,9 +16,13 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'bio' => ['sometimes', 'nullable', 'string', 'max:1000'],
-            'birth_date' => ['sometimes', 'nullable', 'date', 'before:today'],
-            'gender' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'career' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'semester' => ['sometimes', 'nullable', 'integer', 'between:1,12'],
+            'birthdate' => ['sometimes', 'nullable', 'date', 'before:today'],
+            'bio' => ['sometimes', 'nullable', 'string', 'max:300'],
+            'zone_id' => ['sometimes', 'nullable', 'integer', 'exists:zones,id'],
+            'nearby_enabled' => ['sometimes', 'boolean'],
+            'discovery_filters' => ['sometimes', 'nullable', 'array'],
         ]);
 
         if ($validated === []) {
@@ -30,7 +33,7 @@ class ProfileController extends Controller
             $request->user()->update(['name' => $validated['name']]);
         }
 
-        $profileData = Arr::only($validated, ['bio', 'birth_date', 'gender']);
+        $profileData = collect($validated)->except('name')->all();
 
         if ($profileData !== []) {
             $request->user()->profile()->updateOrCreate([], $profileData);

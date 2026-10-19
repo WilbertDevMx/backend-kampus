@@ -12,14 +12,14 @@ class ProfileInterestController extends Controller
     public function index(): JsonResponse
     {
         return response()->json([
-            'data' => Interest::query()->orderBy('name')->get(['id', 'name']),
+            'data' => Interest::query()->orderBy('name')->get(['id', 'name', 'category']),
         ]);
     }
 
     public function update(Request $request): ProfileResource
     {
         $validated = $request->validate([
-            'interest_ids' => ['present', 'array', 'max:20'],
+            'interest_ids' => ['required', 'array', 'min:3', 'max:20'],
             'interest_ids.*' => ['integer', 'distinct', 'exists:interests,id'],
         ]);
 

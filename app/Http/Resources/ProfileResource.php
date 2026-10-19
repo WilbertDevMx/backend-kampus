@@ -24,17 +24,21 @@ class ProfileResource extends JsonResource
                 'email' => $this->email,
             ],
             'profile' => $profile === null ? null : [
+                'career' => $profile->career,
+                'semester' => $profile->semester,
+                'birthdate' => $profile->birthdate?->toDateString(),
                 'bio' => $profile->bio,
-                'birth_date' => $profile->birth_date?->toDateString(),
-                'gender' => $profile->gender,
+                'zone_id' => $profile->zone_id,
+                'nearby_enabled' => $profile->nearby_enabled,
+                'discovery_filters' => $profile->discovery_filters,
                 'interests' => $profile->interests->map(fn ($interest): array => [
                     'id' => $interest->id,
                     'name' => $interest->name,
+                    'category' => $interest->category,
                 ])->values(),
                 'photos' => $profile->photos->map(fn ($photo): array => [
                     'id' => $photo->id,
-                    'mime_type' => $photo->mime_type,
-                    'size' => $photo->size,
+                    'position' => $photo->position,
                     'temporary_url' => Storage::disk(config('filesystems.profile_photos_disk'))
                         ->temporaryUrl($photo->path, now()->addMinutes(15)),
                 ])->values(),

@@ -6,6 +6,7 @@ use App\Http\Resources\ProfileResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProfilePhotoController extends Controller
@@ -14,10 +15,31 @@ class ProfilePhotoController extends Controller
     {
         $validated = $request->validate([
             'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'position' => ['sometimes', 'integer', 'between:1,5'],
         ]);
 
         $user = $request->user();
         $profile = $user->profile()->firstOrCreate([]);
+        $occupiedPositions = $profile->photos()->pluck('position')
+            ->map(fn ($position): int => (int) $position)
+            ->all();
+
+        if (count($occupiedPositions) >= 5) {
+            throw ValidationException::withMessages([
+                'photo' => 'El perfil no puede tener más de 5 fotos.',
+            ]);
+        }
+
+        $position = isset($validated['position'])
+            ? (int) $validated['position']
+            : collect(range(1, 5))->first(fn (int $candidate): bool => ! in_array($candidate, $occupiedPositions, true));
+
+        if (in_array($position, $occupiedPositions, true)) {
+            throw ValidationException::withMessages([
+                'position' => 'La posición seleccionada ya está ocupada.',
+            ]);
+        }
+
         $uploadedPhoto = $validated['photo'];
         $disk = config('filesystems.profile_photos_disk');
         $filename = Str::uuid().'.'.$uploadedPhoto->extension();
@@ -34,8 +56,7 @@ class ProfilePhotoController extends Controller
 
         $profile->photos()->create([
             'path' => $path,
-            'mime_type' => $uploadedPhoto->getMimeType(),
-            'size' => $uploadedPhoto->getSize(),
+            'position' => $position,
         ]);
 
         return (new ProfileResource($user->load(['profile.interests', 'profile.photos'])))

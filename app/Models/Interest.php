@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name'])]
+#[Fillable(['name', 'category'])]
 class Interest extends Model
 {
     /** @use HasFactory<InterestFactory> */
@@ -16,6 +16,6 @@ class Interest extends Model
 
     public function profiles(): BelongsToMany
     {
-        return $this->belongsToMany(Profile::class)->withTimestamps();
+        return $this->belongsToMany(Profile::class);
     }
 }

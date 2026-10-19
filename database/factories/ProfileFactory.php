@@ -20,9 +20,12 @@ class ProfileFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'bio' => fake()->sentence(),
-            'birth_date' => fake()->dateTimeBetween('-30 years', '-18 years')->format('Y-m-d'),
-            'gender' => fake()->randomElement(['woman', 'man', 'non_binary']),
+            'career' => fake()->words(3, true),
+            'semester' => fake()->numberBetween(1, 12),
+            'birthdate' => fake()->dateTimeBetween('-30 years', '-18 years')->format('Y-m-d'),
+            'bio' => fake()->text(200),
+            'nearby_enabled' => false,
+            'discovery_filters' => null,
         ];
     }
 }

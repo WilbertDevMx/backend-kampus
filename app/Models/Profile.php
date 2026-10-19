@@ -10,7 +10,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'bio', 'birth_date', 'gender'])]
+#[Fillable([
+    'user_id',
+    'career',
+    'semester',
+    'birthdate',
+    'bio',
+    'zone_id',
+    'nearby_enabled',
+    'discovery_filters',
+])]
 class Profile extends Model
 {
     /** @use HasFactory<ProfileFactory> */
@@ -19,7 +28,9 @@ class Profile extends Model
     protected function casts(): array
     {
         return [
-            'birth_date' => 'date',
+            'birthdate' => 'date',
+            'nearby_enabled' => 'boolean',
+            'discovery_filters' => 'array',
         ];
     }
 
@@ -30,7 +41,7 @@ class Profile extends Model
 
     public function interests(): BelongsToMany
     {
-        return $this->belongsToMany(Interest::class)->withTimestamps();
+        return $this->belongsToMany(Interest::class);
     }
 
     public function photos(): HasMany

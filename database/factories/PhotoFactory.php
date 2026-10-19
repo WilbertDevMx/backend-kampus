@@ -21,8 +21,7 @@ class PhotoFactory extends Factory
         return [
             'profile_id' => Profile::factory(),
             'path' => fake()->unique()->uuid().'.jpg',
-            'mime_type' => 'image/jpeg',
-            'size' => 1024,
+            'position' => 1,
         ];
     }
 }
