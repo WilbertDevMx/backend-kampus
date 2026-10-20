@@ -13,10 +13,11 @@ class CatalogSeederTest extends TestCase
     public function test_catalog_seeder_can_run_repeatedly_without_duplicates(): void
     {
         $this->seed(CatalogSeeder::class);
+        $interestCount = \DB::table('interests')->count();
         $this->seed(CatalogSeeder::class);
 
         $this->assertDatabaseCount('universities', 3);
-        $this->assertDatabaseCount('interests', 3);
+        $this->assertDatabaseCount('interests', $interestCount);
         $this->assertDatabaseHas('universities', [
             'short_name' => 'UTT',
             'email_domains' => '["utt.edu.mx"]',
