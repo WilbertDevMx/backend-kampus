@@ -1,0 +1,32 @@
+name: Commits
+
+# Revisa que todos los commits de un PR sigan la convención `tipo: descripción`.
+# Sin esto, el versionado automático (release.yml) no sabe qué versión publicar.
+on:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  convencion:
+    name: Convención de commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # Solo se usa aquí: se instala sin guardarse en package.json para no tocar las dependencias de la app.
+      - name: Instalar commitlint
+        run: npm install --no-save --no-package-lock --no-audit --no-fund @commitlint/cli@21.2.3 @commitlint/config-conventional@21.2.3
+
+      - name: Revisar los commits del PR
+        run: >-
+          npx --no-install commitlint --verbose
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
