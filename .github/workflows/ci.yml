@@ -42,7 +42,7 @@ jobs:
           coverage: none
 
       - name: Caché de dependencias de Composer
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
