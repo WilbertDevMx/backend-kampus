@@ -73,6 +73,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Eventos de seguridad (bloqueos, registros, verificaciones), separados del log general.
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => 'info',
+            'days' => env('LOG_SECURITY_DAYS', 90),
+            'replace_placeholders' => true,
+        ],
+
         'monthly' => [
             'driver' => 'monthly',
             'path' => storage_path('logs/laravel.log'),

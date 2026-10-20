@@ -3,10 +3,12 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
+use App\Support\Security\MasksEmail;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -56,6 +58,11 @@ class LoginRequest extends FormRequest
 
         if ($user === null || ! Hash::check($this->string('password')->toString(), $user->password)) {
             RateLimiter::hit($this->throttleKey(), self::LOCKOUT_SECONDS);
+
+            Log::channel('security')->notice('Intento fallido de inicio de sesión.', [
+                'email' => MasksEmail::mask($this->normalizedEmail()),
+                'ip' => $this->ip(),
+            ]);
 
             throw ValidationException::withMessages([
                 'email' => 'Las credenciales no son correctas.',
