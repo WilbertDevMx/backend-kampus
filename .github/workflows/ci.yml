@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Preparar PHP 8.3
         uses: shivammathur/setup-php@v2
