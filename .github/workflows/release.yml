@@ -31,7 +31,7 @@ jobs:
         run: node scripts/release.mjs preview > release-preview.md
 
       - name: Comentar en el PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('node:fs');
