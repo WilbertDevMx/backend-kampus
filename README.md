@@ -2,7 +2,7 @@
 
 API REST de **Kampus**, la aplicación web para la integración social de estudiantes universitarios de la UTT, la UAdeC y el Tecnológico de la Laguna.
 
-Este repositorio contiene únicamente el backend. La interfaz (SPA en React) vive en su propio repositorio y consume esta API.
+Este repositorio contiene únicamente el backend. La app (Expo, web y móvil) vive en su propio repositorio y consume esta API.
 
 ## Stack
 
@@ -15,6 +15,17 @@ Este repositorio contiene únicamente el backend. La interfaz (SPA en React) viv
 | Archivos | Bucket compatible con S3 (Cloudflare R2 / MinIO) |
 | Videollamada | LiveKit, detrás de una interfaz `VideoCallProvider` |
 | Pruebas | PHPUnit · Formato: Laravel Pint |
+
+## Documentación
+
+| Documento | Contenido |
+|---|---|
+| [Esquema de base de datos](docs/base-de-datos/esquema.md) | Diagrama entidad-relación, diccionario de datos, catálogos de valores y trazabilidad con los requisitos |
+| [Arquitectura](docs/diagramas/arquitectura.md) | Diagrama de componentes y de módulos de la API (Mermaid) |
+| [Casos de uso](docs/diagramas/casos-de-uso.svg) | Diagrama UML de casos de uso; la fuente editable es [`casos-de-uso.puml`](docs/diagramas/casos-de-uso.puml) |
+| [Documentación del proyecto](https://doc.kodev.online/) | Anteproyecto, Unidad 2, referencia de la API y changelog de los tres repositorios |
+
+Lo que se agrega con el módulo de Administración (Sprint 2) está marcado con **[Nuevo]** en el esquema y en amarillo en los diagramas.
 
 ## Requisitos
 
@@ -76,6 +87,8 @@ refactor: extrae la consulta de descubrimiento a un Builder
 chore: configura el pipeline de CI
 ```
 
+Tipos válidos: `feat`, `fix`, `perf`, `revert`, `docs`, `refactor`, `test`, `chore`, `ci`, `build` y `style`. El CI rechaza un PR si alguno de sus commits no sigue el formato, y el tipo decide la versión que se publica (ver [Versiones y changelog](https://doc.kodev.online/docs/development/releases)).
+
 ## Definition of Done
 
 Una tarea se considera terminada cuando:
@@ -101,6 +114,8 @@ Cada push y cada Pull Request hacia `main` o `develop` ejecuta automáticamente:
 1. Revisión de formato con Pint.
 2. Verificación de que las migraciones corren contra PostgreSQL.
 3. La suite de pruebas.
+
+Además, en cada Pull Request se revisa la convención de commits (`commits.yml`). En el PR de `develop` a `main`, un bot comenta la versión que se publicará; al fusionarlo se crean el tag y el GitHub Release (`release.yml`). Ese PR se fusiona con **"Create a merge commit"**, no con squash.
 
 ## Privacidad de la ubicación
 
