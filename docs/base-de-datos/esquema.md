@@ -4,15 +4,15 @@ Este documento describe el modelo de datos del MVP de Kampus: el diagrama entida
 
 - **Motor:** PostgreSQL 16.
 - **Uso:** es la especificación que deben implementar las migraciones de `database/migrations/`. Una vez fusionadas, las migraciones pasan a ser la fuente de verdad: si una cambia, este documento se actualiza en el mismo PR.
-- **Tarea:** T-02 · Modelo entidad-relación y migraciones de base de datos (RF-01 a RF-21). 🆕 Módulo de Administración: T-40 a T-43 (RF-22 a RF-24).
+- **Tarea:** T-02 · Modelo entidad-relación y migraciones de base de datos (RF-01 a RF-21). **[Nuevo]** Módulo de Administración: T-40 a T-43 (RF-22 a RF-24).
 
-> 🆕 **Nuevo en Sprint 2 — Módulo de Administración.** Cambio de alcance aprobado el 19 de octubre de 2026 por el Product Owner y el profesor. Agrega:
+> **Nuevo en Sprint 2 — Módulo de Administración.** Cambio de alcance aprobado el 19 de octubre de 2026 por el Product Owner y el profesor. Agrega:
 > - los roles **moderador** (una sola universidad) y **administrador** (todas) en `users.role`;
 > - la **aprobación de grupos** en `groups`;
 > - la universidad que atiende cada reporte (`reports.university_id`);
 > - la tabla nueva **`moderation_actions`**, una bitácora con motivo obligatorio.
 >
-> Todo lo nuevo está marcado con 🆕 en este documento. En el DER se distingue por el comentario `NUEVO S2` y por el color amarillo.
+> Todo lo nuevo está marcado con **[Nuevo]** en este documento. En el DER se distingue por el comentario `NUEVO S2` y por el color amarillo.
 
 ---
 
@@ -225,13 +225,13 @@ Convenciones:
 | Columna | Tipo | Nulo | Llave | Restricción / valor por defecto | Descripción |
 |---|---|---|---|---|---|
 | id | bigint | No | PK | Autoincremental | Identificador del usuario. |
-| university_id | bigint | Sí | FK → universities.id | RESTRICT | Institución del alumno, deducida del dominio de su correo. 🆕 En un **moderador**, la universidad que modera (solo una); en un **administrador**, nulo. |
+| university_id | bigint | Sí | FK → universities.id | RESTRICT | Institución del alumno, deducida del dominio de su correo. **[Nuevo]** En un **moderador**, la universidad que modera (solo una); en un **administrador**, nulo. |
 | name | varchar(255) | No | | | Nombre visible del alumno. |
-| email | varchar(255) | No | UK | | Correo institucional; sirve para iniciar sesión. 🆕 Las cuentas de staff también usan correo institucional, del dominio de su universidad. |
+| email | varchar(255) | No | UK | | Correo institucional; sirve para iniciar sesión. **[Nuevo]** Las cuentas de staff también usan correo institucional, del dominio de su universidad. |
 | email_verified_at | timestamp | Sí | | | Fecha de verificación del correo. Mientras sea nulo la cuenta está inactiva (RF-01). |
 | suspended_at | timestamp | Sí | | | Fecha de suspensión por moderación. Si tiene valor, la cuenta no puede iniciar sesión (RF-15). |
 | password | varchar(255) | No | | Hash bcrypt | Contraseña cifrada (RNF-02). |
-| role | varchar(20) | No | Índice | `'student'` | 🆕 Rol de la cuenta: `student`, `moderator` o `admin`. El registro público siempre crea `student`; solo un administrador crea moderadores y administradores (RF-22). El staff no tiene perfil ni aparece en el descubrimiento. |
+| role | varchar(20) | No | Índice | `'student'` | **[Nuevo]** Rol de la cuenta: `student`, `moderator` o `admin`. El registro público siempre crea `student`; solo un administrador crea moderadores y administradores (RF-22). El staff no tiene perfil ni aparece en el descubrimiento. |
 | remember_token | varchar(100) | Sí | | | Token de "recordarme" de Laravel. |
 
 ### 2.3 `zones` — Catálogo de zonas (campus y colonias)
@@ -339,18 +339,18 @@ La aplicación siempre guarda el par ordenado (`user_one_id < user_two_id`). As�
 |---|---|---|---|---|---|
 | id | bigint | No | PK | Autoincremental | Identificador del grupo. |
 | university_id | bigint | Sí | FK → universities.id; índice compuesto (university_id, category) | SET NULL | Institución del grupo; nulo si es interinstitucional. |
-| created_by | bigint | Sí | FK → users.id | SET NULL | Usuario que creó el grupo: un alumno o, 🆕 en grupos oficiales, un moderador o administrador. |
+| created_by | bigint | Sí | FK → users.id | SET NULL | Usuario que creó el grupo: un alumno o, **[Nuevo]** en grupos oficiales, un moderador o administrador. |
 | name | varchar(255) | No | | | Nombre del grupo (RF-12). |
 | description | text | Sí | | | Descripción del grupo. |
 | category | varchar(20) | No | Índice compuesto (university_id, category) | | Categoría: `deportivo`, `cultural`, `academico` o `social` (RF-11). |
 | image_path | varchar(255) | Sí | | | Ruta de la imagen del grupo en el bucket. |
-| 🆕 status | varchar(20) | No | Índice compuesto (university_id, status) | `'pending'` | Estado de aprobación: `pending`, `approved` o `rejected`. Solo los grupos `approved` aparecen en la exploración (RF-23). |
-| 🆕 is_official | boolean | No | | `false` | `true` si lo creó un moderador o administrador; esos grupos se aprueban automáticamente y llevan la insignia "Oficial". |
-| 🆕 reviewed_by | bigint | Sí | FK → users.id | SET NULL | Moderador o administrador que aprobó o rechazó el grupo. |
-| 🆕 reviewed_at | timestamp | Sí | | | Fecha de la aprobación o del rechazo. |
-| 🆕 rejection_reason | varchar(300) | Sí | | Obligatorio si `status = 'rejected'` | Motivo del rechazo; se le muestra al creador. |
+| **[Nuevo]** status | varchar(20) | No | Índice compuesto (university_id, status) | `'pending'` | Estado de aprobación: `pending`, `approved` o `rejected`. Solo los grupos `approved` aparecen en la exploración (RF-23). |
+| **[Nuevo]** is_official | boolean | No | | `false` | `true` si lo creó un moderador o administrador; esos grupos se aprueban automáticamente y llevan la insignia "Oficial". |
+| **[Nuevo]** reviewed_by | bigint | Sí | FK → users.id | SET NULL | Moderador o administrador que aprobó o rechazó el grupo. |
+| **[Nuevo]** reviewed_at | timestamp | Sí | | | Fecha de la aprobación o del rechazo. |
+| **[Nuevo]** rejection_reason | varchar(300) | Sí | | Obligatorio si `status = 'rejected'` | Motivo del rechazo; se le muestra al creador. |
 
-🆕 Un grupo de un alumno queda en `pending` hasta que lo apruebe un moderador **de la misma universidad** o un administrador. Por ahora, editar un grupo ya aprobado **no** lo regresa a revisión.
+**[Nuevo]** Un grupo de un alumno queda en `pending` hasta que lo apruebe un moderador **de la misma universidad** o un administrador. Por ahora, editar un grupo ya aprobado **no** lo regresa a revisión.
 
 ### 2.13 `group_members` — Integrantes de cada grupo
 
@@ -390,11 +390,11 @@ La aplicación siempre guarda el par ordenado (`user_one_id < user_two_id`). As�
 | reason | varchar(30) | No | | | Motivo del catálogo. Valores en la sección 3. |
 | description | text | Sí | | | Descripción opcional del reporte. |
 | status | varchar(20) | No | Índice | `'pending'` | Estado del reporte en moderación (RF-15). |
-| reviewed_by | bigint | Sí | FK → users.id | SET NULL | 🆕 Moderador o administrador que lo revisó. |
+| reviewed_by | bigint | Sí | FK → users.id | SET NULL | **[Nuevo]** Moderador o administrador que lo revisó. |
 | reviewed_at | timestamp | Sí | | | Fecha de la revisión. |
-| 🆕 university_id | bigint | No | FK → universities.id; índice compuesto (university_id, status) | RESTRICT | Universidad del **usuario reportado**. Define qué moderador atiende el reporte; el administrador ve todos. |
+| **[Nuevo]** university_id | bigint | No | FK → universities.id; índice compuesto (university_id, status) | RESTRICT | Universidad del **usuario reportado**. Define qué moderador atiende el reporte; el administrador ve todos. |
 
-### 2.17 🆕 `moderation_actions` — Bitácora de moderación
+### 2.17 `moderation_actions` — Bitácora de moderación
 
 Registro **inmutable** de cada acción del staff. No tiene `updated_at` y nunca se edita ni se borra.
 
@@ -418,7 +418,7 @@ PostgreSQL no restringe estos valores con `CHECK`. La aplicación los valida, id
 
 | Tabla.columna | Valores | Origen |
 |---|---|---|
-| users.role | 🆕 `student`, `moderator`, `admin` | RF-15, 🆕 RF-22 |
+| users.role | **[Nuevo]** `student`, `moderator`, `admin` | RF-15, **[Nuevo]** RF-22 |
 | zones.type | `campus`, `colonia` | RF-18 |
 | interests.category | `deportes`, `cultura`, `entretenimiento`, `academico`, `social` | Anteproyecto, sección 15.1 |
 | messages.type | `text`, `image`, `location` | RF-08, RF-09, RF-20 |
@@ -426,11 +426,11 @@ PostgreSQL no restringe estos valores con `CHECK`. La aplicación los valida, id
 | group_members.role | `admin`, `member` | RF-12 |
 | reports.reason | `acoso`, `perfil_falso`, `contenido_inapropiado`, `spam`, `otro` | Anteproyecto, sección 15.1 |
 | reports.status | `pending`, `reviewed`, `dismissed` | RF-15 |
-| 🆕 groups.status | `pending`, `approved`, `rejected` | RF-23 |
-| 🆕 moderation_actions.action | `suspend_user`, `reactivate_user`, `delete_user`, `approve_group`, `reject_group`, `create_staff`, `deactivate_staff`, `resolve_report`, `dismiss_report` | RF-15, RF-22, RF-23 |
-| 🆕 moderation_actions.target_type | `user`, `group`, `report` | RF-15, RF-22, RF-23 |
+| **[Nuevo]** groups.status | `pending`, `approved`, `rejected` | RF-23 |
+| **[Nuevo]** moderation_actions.action | `suspend_user`, `reactivate_user`, `delete_user`, `approve_group`, `reject_group`, `create_staff`, `deactivate_staff`, `resolve_report`, `dismiss_report` | RF-15, RF-22, RF-23 |
+| **[Nuevo]** moderation_actions.target_type | `user`, `group`, `report` | RF-15, RF-22, RF-23 |
 
-**Datos iniciales.** `CatalogSeeder` debe sembrar las 3 instituciones con sus dominios y los intereses de la sección 2.6, y poder ejecutarse varias veces sin duplicar nada (usando `upsert`). El catálogo de zonas (campus y colonias de la Comarca Lagunera) se siembra en T-28. 🆕 El **primer administrador** no se siembra con contraseña fija: se crea con el comando `php artisan kampus:create-admin` (T-40).
+**Datos iniciales.** `CatalogSeeder` debe sembrar las 3 instituciones con sus dominios y los intereses de la sección 2.6, y poder ejecutarse varias veces sin duplicar nada (usando `upsert`). El catálogo de zonas (campus y colonias de la Comarca Lagunera) se siembra en T-28. **[Nuevo]** El **primer administrador** no se siembra con contraseña fija: se crea con el comando `php artisan kampus:create-admin` (T-40).
 
 ---
 
@@ -455,16 +455,16 @@ Existen en la base de datos, pero no forman parte del dominio:
 | RF-01 Registro con correo institucional | `universities`, `users` |
 | RF-02 Inicio y cierre de sesión | `users`, `personal_access_tokens`, `cache` |
 | RF-03 Gestión de perfil | `profiles`, `photos`, `interests`, `interest_profile` |
-| RF-05 Descubrimiento tipo swipe | `swipes`, `profiles`; 🆕 excluye cuentas con `role` distinto de `student` |
+| RF-05 Descubrimiento tipo swipe | `swipes`, `profiles`; **[Nuevo]** excluye cuentas con `role` distinto de `student` |
 | RF-06 Filtros de descubrimiento | `profiles.discovery_filters` |
 | RF-07 Generación de match | `swipes`, `matches` |
 | RF-08 / RF-09 Chat e imágenes | `messages` |
-| RF-11 / RF-12 Grupos | `groups`, `group_members`, `group_activities`; 🆕 solo se listan grupos con `status = 'approved'` |
+| RF-11 / RF-12 Grupos | `groups`, `group_members`, `group_activities`; **[Nuevo]** solo se listan grupos con `status = 'approved'` |
 | RF-13 Bloqueo | `blocks` |
-| RF-14 / RF-15 Reporte y moderación | `reports`, `users.suspended_at`, `users.role`; 🆕 `reports.university_id`, `moderation_actions` |
-| 🆕 RF-22 Gestión de cuentas de staff | `users.role`, `users.university_id`, `moderation_actions` (`create_staff`, `deactivate_staff`) |
-| 🆕 RF-23 Aprobación de grupos | `groups.status`, `groups.is_official`, `groups.reviewed_by`, `groups.reviewed_at`, `groups.rejection_reason`, `moderation_actions` |
-| 🆕 RF-24 Consulta de usuarios por universidad | `users.university_id`, `users.role` (el moderador solo ve los de su universidad) |
+| RF-14 / RF-15 Reporte y moderación | `reports`, `users.suspended_at`, `users.role`; **[Nuevo]** `reports.university_id`, `moderation_actions` |
+| **[Nuevo]** RF-22 Gestión de cuentas de staff | `users.role`, `users.university_id`, `moderation_actions` (`create_staff`, `deactivate_staff`) |
+| **[Nuevo]** RF-23 Aprobación de grupos | `groups.status`, `groups.is_official`, `groups.reviewed_by`, `groups.reviewed_at`, `groups.rejection_reason`, `moderation_actions` |
+| **[Nuevo]** RF-24 Consulta de usuarios por universidad | `users.university_id`, `users.role` (el moderador solo ve los de su universidad) |
 | RF-18 Zona del usuario | `zones`, `profiles.zone_id`, `profiles.nearby_enabled`, `user_locations` |
 | RF-19 Vista "Cerca" | `zones`, `user_locations` |
 | RF-20 Ubicación en el chat | `messages` (type `location`) |
