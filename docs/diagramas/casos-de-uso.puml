@@ -7,20 +7,40 @@ skinparam usecase {
   BackgroundColor #FFFBEA
   BorderColor #8A6D00
 }
+' Sprint 2 · Módulo de Administración: lo nuevo en amarillo, lo modificado en amarillo claro
+skinparam usecase<<nuevo>> {
+  BackgroundColor #F5C518
+  BorderColor #8A6D00
+  FontStyle bold
+}
+skinparam usecase<<modificado>> {
+  BackgroundColor #FDE68A
+  BorderColor #8A6D00
+}
+skinparam usecase<<fase 2>> {
+  BackgroundColor #E5E7EB
+  BorderColor #9CA3AF
+  FontColor #6B7280
+}
+skinparam actor<<nuevo>> {
+  BackgroundColor #F5C518
+  BorderColor #8A6D00
+}
 skinparam package {
   BorderColor #555555
 }
 
-title Kampus — Diagrama de casos de uso del MVP
+title Kampus — Diagrama de casos de uso del MVP (Sprint 2: Módulo de Administración)
 
 actor "Visitante" as V
 actor "Estudiante\nverificado" as E
-actor "Administrador" as A
+actor "Moderador\n(una universidad)" as M <<nuevo>>
+actor "Administrador\n(todas)" as A
 actor "Servicio de\ncorreo" as MAIL <<sistema>>
 actor "LiveKit" as LK <<sistema>>
 
 V <|-- E
-E <|-- A
+M <|-- A
 
 rectangle "Kampus" {
   package "Cuenta" {
@@ -40,7 +60,7 @@ rectangle "Kampus" {
   }
 
   package "Descubrimiento" {
-    usecase "Explorar perfiles\ntipo swipe (RF-05)" as UC05
+    usecase "Explorar perfiles\ntipo swipe (RF-05)" as UC05 <<modificado>>
     usecase "Filtrar perfiles (RF-06)" as UC06
     usecase "Ver perfil expandido (RF-21)" as UC21
     usecase "Generar match (RF-07)" as UC07
@@ -50,21 +70,29 @@ rectangle "Kampus" {
   package "Comunicación" {
     usecase "Chatear con un match (RF-08)" as UC08
     usecase "Enviar imagen (RF-09)" as UC09
-    usecase "Compartir ubicación (RF-20)" as UC20
+    usecase "Compartir ubicación (RF-20)" as UC20 <<fase 2>>
     usecase "Hacer videollamada\n1 a 1 (RF-10)" as UC10
   }
 
   package "Grupos" {
-    usecase "Explorar y unirse\na grupos (RF-11)" as UC11
-    usecase "Crear y administrar\ngrupo (RF-12)" as UC12
+    usecase "Explorar y unirse\na grupos aprobados (RF-11)" as UC11 <<modificado>>
+    usecase "Crear y administrar\ngrupo (RF-12)" as UC12 <<modificado>>
     usecase "Publicar actividad (RF-12)" as UC12A
   }
 
-  package "Seguridad y moderación" {
+  package "Seguridad" {
     usecase "Bloquear usuario (RF-13)" as UC13
     usecase "Reportar usuario (RF-14)" as UC14
-    usecase "Revisar reportes (RF-15)" as UC15
-    usecase "Suspender o reactivar\ncuenta (RF-15)" as UC15S
+  }
+
+  package "Administración (nuevo)" {
+    usecase "Consultar usuarios de\nsu universidad (RF-24)" as UC24 <<nuevo>>
+    usecase "Revisar reportes de\nsu universidad (RF-15)" as UC15 <<modificado>>
+    usecase "Suspender o eliminar\ncuenta reportada (RF-15)" as UC15S <<modificado>>
+    usecase "Aprobar o rechazar\ngrupos (RF-23)" as UC23 <<nuevo>>
+    usecase "Crear grupo oficial (RF-12)" as UC12O <<nuevo>>
+    usecase "Registrar acción y motivo\nen la bitácora" as UCLOG <<nuevo>>
+    usecase "Gestionar cuentas de\nstaff (RF-22)" as UC22 <<nuevo>>
   }
 }
 
@@ -99,14 +127,34 @@ UC08 <.. UC20 : <<extend>>
 UC12 <.. UC12A : <<extend>>
 UC10 --> LK
 
-' Administrador
-A --> UC15
-UC15 <.. UC15S : <<extend>>
+' Moderador (nuevo): solo usa el panel; no hace swipe, match ni chat
+M --> UC02
+M --> UC02C
+M --> UC24
+M --> UC15
+M --> UC23
+M --> UC12O
+UC15 <.. UC15S : <<extend>>\n[hay un reporte]
+UC15S ..> UCLOG : <<include>>
+UC23 ..> UCLOG : <<include>>
+
+' Administrador: hereda todo lo del Moderador, en todas las universidades
+A --> UC22
+UC22 ..> UCLOG : <<include>>
+
+note right of UC12
+  El grupo queda pendiente
+  hasta que lo aprueba un moderador
+  de su universidad o un administrador.
+end note
 
 legend right
-  Fuera del diagrama: RF-17 (notificaciones dentro de la app),
-  que es deseable y solo se implementa si el Sprint 5 tiene tiempo.
-  El Administrador hereda los casos del Estudiante verificado,
-  y este a su vez los del Visitante.
+  Sprint 2 · Módulo de Administración (cambio de alcance aprobado el 19 oct 2026)
+  Amarillo: caso o actor nuevo · Amarillo claro: caso modificado · Gris: pasa a fase 2.
+  El Moderador ve y atiende solo su universidad; el Administrador hereda
+  sus casos en todas las universidades y además gestiona las cuentas de staff.
+  El staff no tiene perfil ni aparece en el descubrimiento.
+  El Estudiante verificado hereda los casos del Visitante.
+  Fuera del diagrama: RF-17 (notificaciones), deseable para el Sprint 5.
 endlegend
 @enduml
