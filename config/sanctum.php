@@ -50,7 +50,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // RNF-02: los tokens de la API expiran. Por defecto, 7 días (10080 minutos).
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION', 10080),
 
     /*
     |--------------------------------------------------------------------------

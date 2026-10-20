@@ -32,17 +32,17 @@ jobs:
 
     steps:
       - name: Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Preparar PHP 8.3
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, bcmath, intl, pdo_pgsql, pdo_sqlite, sqlite3
+          extensions: mbstring, bcmath, intl, pdo_pgsql, pdo_sqlite, sqlite3, gd
           coverage: none
 
       - name: Caché de dependencias de Composer
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
@@ -50,6 +50,9 @@ jobs:
 
       - name: Instalar dependencias
         run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Revisar vulnerabilidades conocidas en dependencias
+        run: composer audit --no-interaction
 
       - name: Preparar el entorno
         run: |
