@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
+use App\Models\University;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -40,6 +42,39 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Estudiante de una universidad.
+     */
+    public function student(University $university): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Student,
+            'university_id' => $university->id,
+        ]);
+    }
+
+    /**
+     * Moderador de una sola universidad (RF-22).
+     */
+    public function moderator(University $university): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Moderator,
+            'university_id' => $university->id,
+        ]);
+    }
+
+    /**
+     * Administrador: sin universidad, porque las atiende todas.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Admin,
+            'university_id' => null,
         ]);
     }
 }
