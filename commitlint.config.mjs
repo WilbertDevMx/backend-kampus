@@ -1,9 +1,10 @@
 // Convención de commits del equipo: `tipo: descripción breve en presente`.
 // Ver la página Desarrollo → Commits de la documentación. La revisa CI en cada PR (.github/workflows/commits.yml).
-// Commits que ya estaban en `develop` antes de adoptar la revisión automática. No agregues nuevos.
+// Commits anteriores a la revisión automática (14 oct 2026) que ya no se pueden renombrar. No agregues nuevos.
 const legacyCommits = [
   'adicion de migraciones',
   'fix: endurece la seguridad de la API (cabeceras, CORS, contraseñas, límites, logs y limpieza de EXIF)',
+  'T-07-API-de-perfil-datos,-intereses-y-carga-de-fotos-a-bucket-privado',
 ];
 
 export default {
