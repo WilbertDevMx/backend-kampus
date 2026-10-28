@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('moderation_actions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('actor_id')->constrained('users')->restrictOnDelete();
+            // PostgreSQL no indexa las llaves foráneas por sí solo; la bitácora se consulta por moderador.
+            $table->foreignId('actor_id')->index()->constrained('users')->restrictOnDelete();
             $table->string('action', 30)->index();
 
             // Objetivo polimórfico (usuario, grupo, reporte...): sin FK a propósito.
@@ -19,7 +20,8 @@ return new class extends Migration
 
             $table->foreignId('report_id')->nullable()->constrained('reports')->nullOnDelete();
             $table->foreignId('university_id')->nullable()->constrained('universities')->nullOnDelete();
-            $table->text('reason')->nullable();
+            // Toda acción del staff lleva motivo (RF-15): obligatorio también en la base.
+            $table->text('reason');
 
             // Bitácora: no se edita, por eso solo created_at (sin updated_at).
             $table->timestamp('created_at')->useCurrent();

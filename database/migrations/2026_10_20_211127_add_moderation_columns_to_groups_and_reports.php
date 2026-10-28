@@ -24,31 +24,21 @@ return new class extends Migration
             $table->index(['university_id', 'status']);
         });
 
-        // timestamps() solo donde falten: blocks puede traer ya created_at.
+        // El esquema pide timestamps en todas las tablas salvo interest_profile; estas dos no los traían.
         foreach (['group_members', 'blocks'] as $tableName) {
-            $missing = array_values(array_filter(
-                ['created_at', 'updated_at'],
-                fn (string $column) => ! Schema::hasColumn($tableName, $column),
-            ));
-
-            Schema::table($tableName, function (Blueprint $table) use ($missing) {
-                foreach ($missing as $column) {
-                    $table->timestamp($column)->nullable();
-                }
+            Schema::table($tableName, function (Blueprint $table) {
+                $table->timestamps();
             });
         }
     }
 
     public function down(): void
     {
-        // created_at de blocks puede ser anterior a esta migración: solo se quita updated_at.
-        Schema::table('blocks', function (Blueprint $table) {
-            $table->dropColumn('updated_at');
-        });
-
-        Schema::table('group_members', function (Blueprint $table) {
-            $table->dropColumn(['created_at', 'updated_at']);
-        });
+        foreach (['blocks', 'group_members'] as $tableName) {
+            Schema::table($tableName, function (Blueprint $table) {
+                $table->dropTimestamps();
+            });
+        }
 
         Schema::table('reports', function (Blueprint $table) {
             $table->dropIndex(['university_id', 'status']);
