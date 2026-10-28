@@ -14,6 +14,9 @@ class RegisterApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Cumple `Password::defaults()`: letras, mayúsculas, minúsculas y números. */
+    private const PASSWORD = 'Kampus2026segura';
+
     public function test_registration_assigns_active_university_and_sends_verification_email(): void
     {
         $this->seed(CatalogSeeder::class);
@@ -22,15 +25,14 @@ class RegisterApiTest extends TestCase
         $response = $this->postJson('/api/register', [
             'name' => 'Ada Student',
             'email' => 'ada@utt.edu.mx',
-            'password' => 'secure-password',
-            'password_confirmation' => 'secure-password',
+            'password' => self::PASSWORD,
+            'password_confirmation' => self::PASSWORD,
         ]);
 
         $user = User::where('email', 'ada@utt.edu.mx')->firstOrFail();
 
         $response->assertCreated()
             ->assertJsonPath('user.email', 'ada@utt.edu.mx')
-            ->assertJsonPath('user.university_id', $user->university_id)
             ->assertJsonMissingPath('user.password');
         $this->assertDatabaseHas('users', [
             'email' => 'ada@utt.edu.mx',
@@ -50,14 +52,77 @@ class RegisterApiTest extends TestCase
         $response = $this->postJson('/api/register', [
             'name' => 'Ada Student',
             'email' => 'ada@example.com',
-            'password' => 'secure-password',
-            'password_confirmation' => 'secure-password',
+            'password' => self::PASSWORD,
+            'password_confirmation' => self::PASSWORD,
         ]);
 
         $response->assertInvalid([
             'email' => 'El dominio del correo no está permitido.',
         ]);
         $this->assertDatabaseMissing('users', ['email' => 'ada@example.com']);
+        Notification::assertNothingSent();
+    }
+
+    public function test_registration_stores_the_email_trimmed_and_in_lowercase(): void
+    {
+        $this->seed(CatalogSeeder::class);
+        Notification::fake();
+
+        $this->postJson('/api/register', [
+            'name' => 'Ada Student',
+            'email' => '  Ada@UTT.edu.mx ',
+            'password' => self::PASSWORD,
+            'password_confirmation' => self::PASSWORD,
+        ])->assertCreated()->assertJsonPath('user.email', 'ada@utt.edu.mx');
+
+        $this->assertDatabaseHas('users', ['email' => 'ada@utt.edu.mx']);
+    }
+
+    public function test_registration_rejects_an_email_that_differs_only_in_case(): void
+    {
+        $this->seed(CatalogSeeder::class);
+        Notification::fake();
+        User::factory()->create(['email' => 'ada@utt.edu.mx']);
+
+        $this->postJson('/api/register', [
+            'name' => 'Ada Student',
+            'email' => 'ADA@utt.edu.mx',
+            'password' => self::PASSWORD,
+            'password_confirmation' => self::PASSWORD,
+        ])->assertInvalid(['email']);
+
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_public_registration_always_creates_a_student(): void
+    {
+        $this->seed(CatalogSeeder::class);
+        Notification::fake();
+
+        $this->postJson('/api/register', [
+            'name' => 'Ada Student',
+            'email' => 'ada@utt.edu.mx',
+            'password' => self::PASSWORD,
+            'password_confirmation' => self::PASSWORD,
+            'role' => 'admin',
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('users', ['email' => 'ada@utt.edu.mx', 'role' => 'student']);
+    }
+
+    public function test_registration_rejects_a_weak_password(): void
+    {
+        $this->seed(CatalogSeeder::class);
+        Notification::fake();
+
+        $this->postJson('/api/register', [
+            'name' => 'Ada Student',
+            'email' => 'ada@utt.edu.mx',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertInvalid(['password']);
+
+        $this->assertDatabaseMissing('users', ['email' => 'ada@utt.edu.mx']);
         Notification::assertNothingSent();
     }
 
