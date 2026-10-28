@@ -3,20 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ProfileResource;
+use App\Support\Images\ImageSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProfilePhotoController extends Controller
 {
-    public function store(Request $request): ProfileResource|Response
+    public function store(Request $request, ImageSanitizer $sanitizer): ProfileResource|Response
     {
         $validated = $request->validate([
             'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'position' => ['sometimes', 'integer', 'between:1,5'],
         ]);
+
+        // RNF-11: las fotos del celular traen la ubicación GPS exacta en el EXIF. Se re-codifican antes
+        // de guardarlas, y nunca se guarda el archivo original.
+        try {
+            $cleanImage = $sanitizer->sanitize($validated['photo']);
+        } catch (InvalidArgumentException) {
+            throw ValidationException::withMessages([
+                'photo' => 'El archivo no es una imagen válida.',
+            ]);
+        }
 
         $user = $request->user();
         $profile = $user->profile()->firstOrCreate([]);
@@ -40,17 +52,10 @@ class ProfilePhotoController extends Controller
             ]);
         }
 
-        $uploadedPhoto = $validated['photo'];
         $disk = config('filesystems.profile_photos_disk');
-        $filename = Str::uuid().'.'.$uploadedPhoto->extension();
-        $path = Storage::disk($disk)->putFileAs(
-            'profiles/'.$user->getKey(),
-            $uploadedPhoto,
-            $filename,
-            ['visibility' => 'private'],
-        );
+        $path = 'profiles/'.$user->getKey().'/'.Str::uuid().'.'.$validated['photo']->extension();
 
-        if (! is_string($path)) {
+        if (! Storage::disk($disk)->put($path, $cleanImage, ['visibility' => 'private'])) {
             return response()->json(['message' => 'No fue posible guardar la foto.'], 503);
         }
 

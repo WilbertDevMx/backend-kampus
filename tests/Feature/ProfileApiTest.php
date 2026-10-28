@@ -190,7 +190,7 @@ class ProfileApiTest extends TestCase
         Storage::fake('s3');
         config(['filesystems.profile_photos_disk' => 's3']);
         $user = User::factory()->create();
-        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
+        $png = $this->validPng();
 
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/profile/photos', [
@@ -227,13 +227,13 @@ class ProfileApiTest extends TestCase
             ]);
         }
 
-        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
+        $png = $this->validPng();
 
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/profile/photos', [
                 'photo' => UploadedFile::fake()->createWithContent('sixth.png', $png),
             ])
-            ->assertInvalid(['photo']);
+            ->assertInvalid(['photo' => 'El perfil no puede tener más de 5 fotos.']);
 
         $this->assertDatabaseCount('photos', 5);
         Storage::disk('s3')->assertDirectoryEmpty('profiles');
@@ -299,5 +299,75 @@ class ProfileApiTest extends TestCase
             ->assertInvalid(['bio']);
 
         $this->assertDatabaseMissing('profiles', ['user_id' => $user->id]);
+    }
+
+    public function test_uploaded_photo_is_stored_without_exif_or_gps_metadata(): void
+    {
+        Storage::fake('s3');
+        config(['filesystems.profile_photos_disk' => 's3']);
+        $user = User::factory()->create();
+        $jpeg = $this->jpegWithGpsExif();
+        $this->assertStringContainsString("Exif\0\0", $jpeg, 'La foto de prueba debe traer EXIF.');
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/profile/photos', [
+                'photo' => UploadedFile::fake()->createWithContent('celular.jpg', $jpeg),
+            ])
+            ->assertCreated();
+
+        $stored = Storage::disk('s3')->get(Photo::query()->firstOrFail()->path);
+
+        $this->assertStringNotContainsString("Exif\0\0", $stored);
+        $this->assertStringNotContainsString('GPSLatitude-25.5428', $stored);
+        $this->assertSame('image/jpeg', getimagesizefromstring($stored)['mime']);
+    }
+
+    public function test_a_corrupt_image_is_rejected_without_creating_anything(): void
+    {
+        Storage::fake('s3');
+        config(['filesystems.profile_photos_disk' => 's3']);
+        $user = User::factory()->create();
+        // Encabezado PNG válido con datos dañados (CRC incorrecto): pasa la regla `image`, pero no se puede decodificar.
+        $corrupt = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/profile/photos', [
+                'photo' => UploadedFile::fake()->createWithContent('danada.png', $corrupt),
+            ])
+            ->assertInvalid(['photo' => 'El archivo no es una imagen válida.']);
+
+        $this->assertDatabaseCount('photos', 0);
+        $this->assertDatabaseMissing('profiles', ['user_id' => $user->id]);
+    }
+
+    /**
+     * PNG de 2 × 2 generado con GD, para que sea una imagen que se pueda decodificar.
+     */
+    private function validPng(): string
+    {
+        $image = imagecreatetruecolor(2, 2);
+        ob_start();
+        imagepng($image);
+        $png = (string) ob_get_clean();
+        imagedestroy($image);
+
+        return $png;
+    }
+
+    /**
+     * JPEG de 2 × 2 con un segmento APP1 (EXIF) que simula la ubicación de un celular.
+     */
+    private function jpegWithGpsExif(): string
+    {
+        $image = imagecreatetruecolor(2, 2);
+        ob_start();
+        imagejpeg($image);
+        $jpeg = (string) ob_get_clean();
+        imagedestroy($image);
+
+        $payload = "Exif\0\0".'GPSLatitude-25.5428';
+        $app1 = "\xFF\xE1".pack('n', strlen($payload) + 2).$payload;
+
+        return substr($jpeg, 0, 2).$app1.substr($jpeg, 2);
     }
 }
