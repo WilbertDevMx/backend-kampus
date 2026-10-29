@@ -105,7 +105,19 @@ php artisan test                 # Ejecuta las pruebas
 ./vendor/bin/pint                # Corrige el formato del código
 ./vendor/bin/pint --test         # Solo revisa el formato (lo mismo que hace CI)
 php artisan migrate:fresh --seed # Reinicia la base de datos con datos de prueba
+php artisan kampus:create-admin  # Crea el primer administrador (correo institucional)
 ```
+
+## Roles
+
+Cada cuenta tiene un rol en `users.role`: `student`, `moderator` (una sola universidad) o `admin` (todas). El registro público siempre crea `student`, y el staff no usa las funciones sociales.
+
+| Pieza | Dónde | Para qué |
+|---|---|---|
+| `App\Enums\UserRole` | `app/Enums` | Valores del rol y `isStaff()` |
+| Middleware `role` | `bootstrap/app.php` | `role:student` en rutas sociales; `role:moderator,admin` en el panel. Responde `403` a los demás |
+| `UserPolicy` y `User::manageableBy()` | `app/Policies`, `app/Models/User.php` | Un moderador solo actúa sobre estudiantes de su universidad; un administrador, sobre todos |
+| `kampus:create-admin` | `app/Console/Commands` | El primer administrador; los demás los crea un administrador desde el panel (T-41) |
 
 ## Integración continua
 

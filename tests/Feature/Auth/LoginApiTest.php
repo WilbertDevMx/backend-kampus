@@ -26,7 +26,8 @@ class LoginApiTest extends TestCase
             ->assertJsonPath('token_type', 'Bearer')
             ->assertJsonPath('user.id', $user->id)
             ->assertJsonPath('user.email', 'alumno@utt.edu.mx')
-            ->assertJsonStructure(['token', 'token_type', 'expires_at', 'user' => ['id', 'name', 'email', 'email_verified_at']])
+            ->assertJsonPath('user.role', 'student')
+            ->assertJsonStructure(['token', 'token_type', 'expires_at', 'user' => ['id', 'name', 'email', 'email_verified_at', 'role', 'university_id']])
             ->assertJsonMissingPath('user.password');
 
         $this->assertDatabaseHas('personal_access_tokens', [
@@ -45,7 +46,8 @@ class LoginApiTest extends TestCase
         $this->withToken($token)
             ->getJson('/api/user')
             ->assertOk()
-            ->assertJsonPath('data.email', 'alumno@utt.edu.mx');
+            ->assertJsonPath('data.email', 'alumno@utt.edu.mx')
+            ->assertJsonPath('data.role', 'student');
     }
 
     public function test_email_is_matched_case_insensitively(): void
