@@ -4,6 +4,7 @@
 const legacyCommits = [
   'adicion de migraciones',
   'fix: endurece la seguridad de la API (cabeceras, CORS, contraseñas, límites, logs y limpieza de EXIF)',
+  'Initial plan',
 ];
 
 export default {
