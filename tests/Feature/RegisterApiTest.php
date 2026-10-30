@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\VerifyEmailNotification;
 use Database\Seeders\CatalogSeeder;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
@@ -41,7 +43,25 @@ class RegisterApiTest extends TestCase
             'role' => 'student',
         ]);
 
-        Notification::assertSentToOnce($user, VerifyEmail::class);
+        Notification::assertSentToOnce($user, VerifyEmailNotification::class);
+    }
+
+    public function test_verification_email_is_queued_instead_of_sent_during_the_request(): void
+    {
+        $this->seed(CatalogSeeder::class);
+        Queue::fake();
+
+        $this->postJson('/api/register', [
+            'name' => 'Ada Student',
+            'email' => 'ada@utt.edu.mx',
+            'password' => self::PASSWORD,
+            'password_confirmation' => self::PASSWORD,
+        ])->assertCreated();
+
+        Queue::assertPushed(
+            SendQueuedNotifications::class,
+            fn (SendQueuedNotifications $job) => $job->notification instanceof VerifyEmailNotification,
+        );
     }
 
     public function test_registration_rejects_a_domain_not_in_an_active_university(): void
