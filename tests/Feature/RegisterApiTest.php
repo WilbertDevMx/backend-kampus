@@ -146,6 +146,22 @@ class RegisterApiTest extends TestCase
         Notification::assertNothingSent();
     }
 
+    public function test_validation_errors_are_returned_in_spanish(): void
+    {
+        $this->seed(CatalogSeeder::class);
+        User::factory()->create(['email' => 'ada@utt.edu.mx']);
+
+        $this->postJson('/api/register', [
+            'email' => 'ada@utt.edu.mx',
+            'password' => self::PASSWORD,
+            'password_confirmation' => 'OtraDistinta2026',
+        ])->assertInvalid([
+            'name' => 'El campo nombre es obligatorio.',
+            'email' => 'El correo ya está registrado.',
+            'password' => 'La confirmación de contraseña no coincide.',
+        ]);
+    }
+
     public function test_signed_verification_link_marks_the_user_as_verified(): void
     {
         $user = User::factory()->create();
