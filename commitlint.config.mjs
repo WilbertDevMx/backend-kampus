@@ -5,6 +5,7 @@ const legacyCommits = [
   'adicion de migraciones',
   'fix: endurece la seguridad de la API (cabeceras, CORS, contraseñas, límites, logs y limpieza de EXIF)',
   'T-07-API-de-perfil-datos,-intereses-y-carga-de-fotos-a-bucket-privado',
+  'Initial plan',
 ];
 
 export default {
