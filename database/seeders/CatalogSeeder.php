@@ -43,8 +43,16 @@ class CatalogSeeder extends Seeder
 
         DB::table('interests')->upsert([
             ['name' => 'Fútbol', 'category' => 'deportes', 'created_at' => $timestamp, 'updated_at' => $timestamp],
-            ['name' => 'Programación', 'category' => 'academico', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Baloncesto', 'category' => 'deportes', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Fotografía', 'category' => 'cultura', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Cine', 'category' => 'cultura', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Música', 'category' => 'entretenimiento', 'created_at' => $timestamp, 'updated_at' => $timestamp],
             ['name' => 'Anime', 'category' => 'entretenimiento', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Videojuegos', 'category' => 'entretenimiento', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Programación', 'category' => 'academico', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Lectura', 'category' => 'academico', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Viajes', 'category' => 'social', 'created_at' => $timestamp, 'updated_at' => $timestamp],
+            ['name' => 'Naturaleza', 'category' => 'social', 'created_at' => $timestamp, 'updated_at' => $timestamp],
         ], ['name'], ['category', 'updated_at']);
     }
 }
