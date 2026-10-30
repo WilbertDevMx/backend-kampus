@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -26,6 +27,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
+    }
+
+    /**
+     * Lo llama el listener de `Registered`; se reemplaza para mandar el correo por la cola.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
     }
 
     /**
