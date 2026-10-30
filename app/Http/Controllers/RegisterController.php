@@ -21,8 +21,14 @@ class RegisterController extends Controller
 
         event(new Registered($user));
 
+        // La app decide con esto si muestra "Revisa tu correo" o manda directo al login.
+        $verificationRequired = ! $user->hasVerifiedEmail();
+
         return response()->json([
-            'message' => 'Registro exitoso. Revisa tu correo para verificar tu cuenta.',
+            'message' => $verificationRequired
+                ? 'Registro exitoso. Revisa tu correo para verificar tu cuenta.'
+                : 'Registro exitoso. Ya puedes iniciar sesión.',
+            'email_verification_required' => $verificationRequired,
             'user' => new UserResource($user->refresh()),
         ], 201);
     }

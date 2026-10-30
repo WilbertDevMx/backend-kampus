@@ -38,6 +38,15 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Con `AUTH_EMAIL_VERIFICATION=false` toda cuenta cuenta como verificada. Este método lo usan el
+     * listener de `Registered`, el login y el middleware `verified`, así que basta con revisarlo aquí.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        return ! config('auth.email_verification') || parent::hasVerifiedEmail();
+    }
+
+    /**
      * Mismo valor por defecto que la columna, para que el modelo recién creado ya tenga su rol.
      *
      * @var array<string, mixed>

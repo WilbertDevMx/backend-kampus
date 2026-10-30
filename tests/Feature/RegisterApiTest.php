@@ -34,6 +34,7 @@ class RegisterApiTest extends TestCase
         $user = User::where('email', 'ada@utt.edu.mx')->firstOrFail();
 
         $response->assertCreated()
+            ->assertJsonPath('email_verification_required', true)
             ->assertJsonPath('user.email', 'ada@utt.edu.mx')
             ->assertJsonMissingPath('user.password');
         $this->assertDatabaseHas('users', [
@@ -143,6 +144,25 @@ class RegisterApiTest extends TestCase
         ])->assertInvalid(['password']);
 
         $this->assertDatabaseMissing('users', ['email' => 'ada@utt.edu.mx']);
+        Notification::assertNothingSent();
+    }
+
+    public function test_registration_skips_the_verification_email_when_verification_is_disabled(): void
+    {
+        config(['auth.email_verification' => false]);
+        $this->seed(CatalogSeeder::class);
+        Notification::fake();
+
+        $this->postJson('/api/register', [
+            'name' => 'Ada Student',
+            'email' => 'ada@utt.edu.mx',
+            'password' => self::PASSWORD,
+            'password_confirmation' => self::PASSWORD,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('email_verification_required', false)
+            ->assertJsonPath('message', 'Registro exitoso. Ya puedes iniciar sesión.');
+
         Notification::assertNothingSent();
     }
 

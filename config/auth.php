@@ -114,4 +114,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Verificación de correo (RF-01)
+    |--------------------------------------------------------------------------
+    |
+    | En `false` las cuentas se tratan como verificadas: no se manda el correo
+    | de verificación, el login no la pide y pasan el middleware `verified`.
+    | Solo para desarrollo; en producción debe quedarse en `true`.
+    |
+    */
+
+    'email_verification' => (bool) env('AUTH_EMAIL_VERIFICATION', true),
+
 ];

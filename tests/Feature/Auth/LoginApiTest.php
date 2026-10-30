@@ -93,6 +93,17 @@ class LoginApiTest extends TestCase
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
+    public function test_unverified_user_can_log_in_and_use_the_api_when_verification_is_disabled(): void
+    {
+        config(['auth.email_verification' => false]);
+        User::factory()->unverified()->create(['email' => 'alumno@utt.edu.mx']);
+
+        $token = $this->login('alumno@utt.edu.mx')->assertCreated()->json('token');
+
+        // Las rutas con el middleware `verified` también la dejan pasar.
+        $this->withToken($token)->getJson('/api/user')->assertOk();
+    }
+
     public function test_account_is_locked_after_five_failed_attempts(): void
     {
         User::factory()->create(['email' => 'alumno@utt.edu.mx']);
