@@ -4,6 +4,10 @@ use App\Http\Controllers\Auth\AuthTokenController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\DiscoveryFilterController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\Groups\GroupActivityController;
+use App\Http\Controllers\Groups\GroupController;
+use App\Http\Controllers\Groups\GroupImageController;
+use App\Http\Controllers\Groups\GroupMembershipController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileInterestController;
@@ -53,5 +57,31 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
         // Matches (T-10, RF-07).
         Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
+
+        // Grupos: explorar, crear, unirse y actividades (T-17, RF-11 y RF-12).
+        Route::prefix('groups')
+            ->name('groups.')
+            ->where(['group' => '[0-9]+', 'activity' => '[0-9]+'])
+            ->scopeBindings()
+            ->group(function () {
+                Route::get('/', [GroupController::class, 'index'])->name('index');
+                Route::get('/mine', [GroupController::class, 'mine'])->name('mine');
+                Route::post('/', [GroupController::class, 'store'])->middleware('throttle:10,1')->name('store');
+                Route::get('/{group}', [GroupController::class, 'show'])->name('show');
+                Route::patch('/{group}', [GroupController::class, 'update'])->name('update');
+                Route::delete('/{group}', [GroupController::class, 'destroy'])->name('destroy');
+                Route::post('/{group}/image', [GroupImageController::class, 'store'])
+                    ->middleware('throttle:10,1')
+                    ->name('image.store');
+
+                Route::get('/{group}/members', [GroupMembershipController::class, 'index'])->name('members.index');
+                Route::post('/{group}/members', [GroupMembershipController::class, 'store'])->name('members.store');
+                Route::delete('/{group}/members/me', [GroupMembershipController::class, 'destroy'])->name('members.destroy');
+
+                Route::get('/{group}/activities', [GroupActivityController::class, 'index'])->name('activities.index');
+                Route::post('/{group}/activities', [GroupActivityController::class, 'store'])->name('activities.store');
+                Route::patch('/{group}/activities/{activity}', [GroupActivityController::class, 'update'])->name('activities.update');
+                Route::delete('/{group}/activities/{activity}', [GroupActivityController::class, 'destroy'])->name('activities.destroy');
+            });
     });
 });
