@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Auth\AuthTokenController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\DiscoveryFilterController;
@@ -83,5 +84,17 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
                 Route::patch('/{group}/activities/{activity}', [GroupActivityController::class, 'update'])->name('activities.update');
                 Route::delete('/{group}/activities/{activity}', [GroupActivityController::class, 'destroy'])->name('activities.destroy');
             });
+    });
+});
+
+// Panel de administración (módulo de Administración): token, correo verificado y una cuenta de staff.
+Route::middleware(['auth:sanctum', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    // Gestión de staff: solo administradores (T-41, RF-22).
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+        Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+        Route::patch('/staff/{staff}', [StaffController::class, 'update'])
+            ->whereNumber('staff')
+            ->name('staff.update');
     });
 });
