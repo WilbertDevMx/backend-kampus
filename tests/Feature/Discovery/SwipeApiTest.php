@@ -33,7 +33,7 @@ class SwipeApiTest extends TestCase
 
         $this->postJson('/api/swipes', ['user_id' => $liked->id, 'liked' => true])
             ->assertCreated()
-            ->assertExactJson(['data' => ['user_id' => $liked->id, 'liked' => true]]);
+            ->assertExactJson(['data' => ['user_id' => $liked->id, 'liked' => true, 'match' => null]]);
         $this->postJson('/api/swipes', ['user_id' => $passed->id, 'liked' => false])
             ->assertCreated()
             ->assertJsonPath('data.liked', false);

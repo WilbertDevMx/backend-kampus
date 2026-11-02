@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Discovery\RecordSwipe;
+use App\Http\Resources\MatchResource;
 use App\Models\Swipe;
 use App\Models\User;
+use App\Models\UserMatch;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,8 +16,9 @@ class SwipeController extends Controller
 {
     /**
      * "Me interesa" (`liked: true`) o "Pasar" (`liked: false`) sobre un perfil del descubrimiento (RF-05).
+     * Si el "Me interesa" es mutuo, crea el match (RF-07).
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, RecordSwipe $recordSwipe): JsonResponse
     {
         $validated = $request->validate([
             'user_id' => ['required', 'integer'],
@@ -41,21 +45,23 @@ class SwipeController extends Controller
             return $this->alreadyEvaluated();
         }
 
+        $liked = (bool) $validated['liked'];
+
         try {
-            $swipe = Swipe::create([
-                'swiper_id' => $swiper->getKey(),
-                'swiped_id' => $target->getKey(),
-                'liked' => $validated['liked'],
-            ]);
+            $match = $recordSwipe->handle($swiper, $target, $liked);
         } catch (UniqueConstraintViolationException) {
             // Dos peticiones casi simultáneas: la llave única (swiper_id, swiped_id) ya guardó la primera.
             return $this->alreadyEvaluated();
         }
 
+        // `match` es el aviso inmediato para quien cierra el par; la otra persona lo recibe por WebSocket (T-10).
         return response()->json([
             'data' => [
                 'user_id' => $target->getKey(),
-                'liked' => $swipe->liked,
+                'liked' => $liked,
+                'match' => $match === null
+                    ? null
+                    : new MatchResource($match->load(UserMatch::userSummaryRelations())),
             ],
         ], 201);
     }

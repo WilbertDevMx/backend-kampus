@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthTokenController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\DiscoveryFilterController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\MatchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileInterestController;
 use App\Http\Controllers\ProfilePhotoController;
@@ -49,5 +50,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('/discover/filters', [DiscoveryFilterController::class, 'show'])->name('discover.filters.show');
         Route::put('/discover/filters', [DiscoveryFilterController::class, 'update'])->name('discover.filters.update');
         Route::post('/swipes', [SwipeController::class, 'store'])->name('swipes.store');
+
+        // Matches (T-10, RF-07).
+        Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
     });
 });
