@@ -22,7 +22,7 @@ class ProfileController extends Controller
             'birthdate' => ['sometimes', 'nullable', 'date', 'before:today'],
             'bio' => ['sometimes', 'nullable', 'string', 'max:300'],
             'zone_id' => ['sometimes', 'nullable', 'integer', 'exists:zones,id'],
-            'nearby_enabled' => ['sometimes', 'boolean'],
+            // "Cerca de ti" solo se activa con su celda y se desactiva borrándola: va por /location/nearby (T-28).
             'discovery_filters' => ['sometimes', 'nullable', 'array:universities,career,interests'],
             ...DiscoveryFilters::rules('discovery_filters.'),
         ]);

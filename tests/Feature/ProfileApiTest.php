@@ -50,7 +50,8 @@ class ProfileApiTest extends TestCase
             ->assertJsonPath('data.profile.bio', 'Me gusta la fotografía y la música.')
             ->assertJsonPath('data.profile.birthdate', '2002-04-15')
             ->assertJsonPath('data.profile.zone_id', $zoneId)
-            ->assertJsonPath('data.profile.nearby_enabled', true);
+            // "Cerca de ti" no se activa desde aquí: necesita su celda en PUT /api/location/nearby (T-28).
+            ->assertJsonPath('data.profile.nearby_enabled', false);
         $this->assertDatabaseHas('profiles', [
             'user_id' => $user->id,
             'career' => 'Ingeniería en Tecnologías de la Información',

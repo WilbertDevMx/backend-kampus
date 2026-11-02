@@ -39,6 +39,14 @@ class Profile extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Zona declarada: campus o colonia (RF-18).
+     */
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(Zone::class);
+    }
+
     public function interests(): BelongsToMany
     {
         return $this->belongsToMany(Interest::class);
