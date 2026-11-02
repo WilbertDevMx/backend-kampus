@@ -115,7 +115,7 @@ Cada cuenta tiene un rol en `users.role`: `student`, `moderator` (una sola unive
 | Pieza | Dónde | Para qué |
 |---|---|---|
 | `App\Enums\UserRole` | `app/Enums` | Valores del rol y `isStaff()` |
-| Middleware `role` | `bootstrap/app.php` | `role:student` en rutas sociales; `role:moderator,admin` en el panel. Responde `403` a los demás |
+| Middleware `role` | `bootstrap/app.php` | `role:student` en las rutas sociales (perfil, descubrimiento y swipe); `role:moderator,admin` en el panel. Responde `403` a los demás |
 | `UserPolicy` y `User::manageableBy()` | `app/Policies`, `app/Models/User.php` | Un moderador solo actúa sobre estudiantes de su universidad; un administrador, sobre todos |
 | `kampus:create-admin` | `app/Console/Commands` | El primer administrador; los demás los crea un administrador desde el panel (T-41) |
 

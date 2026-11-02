@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 class ProfileResource extends JsonResource
 {
@@ -39,8 +38,7 @@ class ProfileResource extends JsonResource
                 'photos' => $profile->photos->map(fn ($photo): array => [
                     'id' => $photo->id,
                     'position' => $photo->position,
-                    'temporary_url' => Storage::disk(config('filesystems.profile_photos_disk'))
-                        ->temporaryUrl($photo->path, now()->addMinutes(15)),
+                    'temporary_url' => $photo->temporaryUrl(),
                 ])->values(),
             ],
         ];
