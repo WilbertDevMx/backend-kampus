@@ -46,6 +46,21 @@ class ModerationAction extends Model
         ]);
     }
 
+    /**
+     * Registra una acción del staff sobre un grupo (T-42), en el ámbito de la universidad del grupo.
+     */
+    public static function recordOnGroup(User $actor, ModerationActionType $action, Group $group, string $reason): self
+    {
+        return static::create([
+            'actor_id' => $actor->getKey(),
+            'action' => $action,
+            'target_type' => ModerationTarget::Group,
+            'target_id' => $group->getKey(),
+            'university_id' => $group->university_id,
+            'reason' => $reason,
+        ]);
+    }
+
     protected function casts(): array
     {
         return [

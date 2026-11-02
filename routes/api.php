@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\GroupReviewController;
+use App\Http\Controllers\Admin\OfficialGroupController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Auth\AuthTokenController;
 use App\Http\Controllers\DiscoveryController;
@@ -96,5 +98,17 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('admin')->name('admin.')
         Route::patch('/staff/{staff}', [StaffController::class, 'update'])
             ->whereNumber('staff')
             ->name('staff.update');
+    });
+
+    // Revisión de grupos y grupos oficiales: moderadores (su universidad) y administradores (T-42, RF-23).
+    Route::middleware('role:moderator,admin')->group(function () {
+        Route::get('/groups', [GroupReviewController::class, 'index'])->name('groups.index');
+        Route::post('/groups', [OfficialGroupController::class, 'store'])->name('groups.store');
+        Route::post('/groups/{group}/approve', [GroupReviewController::class, 'approve'])
+            ->whereNumber('group')
+            ->name('groups.approve');
+        Route::post('/groups/{group}/reject', [GroupReviewController::class, 'reject'])
+            ->whereNumber('group')
+            ->name('groups.reject');
     });
 });
