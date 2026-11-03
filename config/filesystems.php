@@ -17,6 +17,9 @@ return [
 
     'profile_photos_disk' => env('PROFILE_PHOTOS_DISK', 's3'),
 
+    // Imágenes de los grupos (T-17): también en el bucket privado, con URL firmada.
+    'group_images_disk' => env('GROUP_IMAGES_DISK', 's3'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
