@@ -9,6 +9,7 @@ use App\Http\Controllers\MatchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileInterestController;
 use App\Http\Controllers\ProfilePhotoController;
+use App\Http\Controllers\RecoverPasswordController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Resources\UserResource;
@@ -29,6 +30,15 @@ Route::post('/login', [AuthTokenController::class, 'store'])->name('auth.login')
 Route::post('/logout', [AuthTokenController::class, 'destroy'])
     ->middleware('auth:sanctum')
     ->name('auth.logout');
+
+// Recuperación de contraseña por correo, con enlace de un solo uso (T-45).
+Route::post('/forgot-password', [RecoverPasswordController::class, 'sendResetLink'])
+    ->middleware('throttle:6,1')
+    ->name('password.email');
+
+Route::post('/reset-password', [RecoverPasswordController::class, 'reset'])
+    ->middleware('throttle:6,1')
+    ->name('password.update');
 
 // Rutas de usuario: requieren token y correo verificado (RF-01).
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
