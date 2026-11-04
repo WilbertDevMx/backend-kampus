@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\GroupCategory;
 use App\Enums\GroupMemberRole;
 use App\Enums\GroupStatus;
+use App\Enums\UserRole;
 use Database\Factories\GroupFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -57,6 +58,11 @@ class Group extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     public function members(): BelongsToMany
@@ -121,6 +127,23 @@ class Group extends Model
         $query->where(fn (Builder $visible) => $visible
             ->where('groups.status', GroupStatus::Approved)
             ->orWhereHas('members', fn (Builder $members) => $members->whereKey($user->getKey())));
+    }
+
+    /**
+     * Grupos que `$staff` puede revisar (RF-23): un administrador, todos; un moderador, solo los de su
+     * universidad; un estudiante, ninguno.
+     *
+     * @param  Builder<Group>  $query
+     */
+    public function scopeReviewableBy(Builder $query, User $staff): void
+    {
+        match ($staff->role) {
+            UserRole::Admin => null,
+            UserRole::Moderator => $staff->university_id === null
+                ? $query->whereRaw('1 = 0')
+                : $query->where('groups.university_id', $staff->university_id),
+            UserRole::Student => $query->whereRaw('1 = 0'),
+        };
     }
 
     /**

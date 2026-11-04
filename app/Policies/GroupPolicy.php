@@ -40,6 +40,17 @@ class GroupPolicy
     }
 
     /**
+     * Aprobar o rechazar un grupo (T-42, RF-23): un moderador solo los de su universidad; un administrador,
+     * todos. Un grupo fuera de su alcance responde `404`.
+     */
+    public function review(User $user, Group $group): Response
+    {
+        return Group::query()->reviewableBy($user)->whereKey($group->getKey())->exists()
+            ? Response::allow()
+            : Response::denyAsNotFound();
+    }
+
+    /**
      * La lista de integrantes la ven solo los integrantes.
      */
     public function viewMembers(User $user, Group $group): Response
