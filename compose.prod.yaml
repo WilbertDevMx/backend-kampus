@@ -1,0 +1,75 @@
+# Entorno de pruebas en un solo servidor (T-24): API, WebSocket, cola, tareas programadas y PostgreSQL.
+# Uso: docker compose -f compose.prod.yaml --env-file .env.production up -d --build
+# Las variables salen de .env.production (copia de .env.production.example que nunca se sube al repo).
+
+x-api: &api
+  build: .
+  image: kampus-api
+  env_file: .env.production
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+  volumes:
+    - logs:/var/www/html/storage/logs
+
+services:
+  # Entrada pública con HTTPS automático (Let's Encrypt).
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./public:/var/www/html/public:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+      - reverb
+
+  # PHP-FPM con la API.
+  app:
+    <<: *api
+
+  # Cola de trabajos: correos de verificación y recuperación, y broadcasts como match.created.
+  queue:
+    <<: *api
+    command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600"]
+
+  # Tareas programadas de Laravel (schedule:work revisa cada minuto).
+  scheduler:
+    <<: *api
+    command: ["php", "artisan", "schedule:work"]
+
+  # Servidor de WebSocket (T-13). Solo escucha en la red interna; Caddy lo publica por /app.
+  reverb:
+    <<: *api
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  logs:
+  caddy_data:
+  caddy_config:
