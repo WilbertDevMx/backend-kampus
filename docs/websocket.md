@@ -19,11 +19,15 @@ REVERB_PORT=8080
 REVERB_SCHEME=http
 REVERB_SERVER_HOST=0.0.0.0
 REVERB_SERVER_PORT=8080
+REVERB_ALLOWED_ORIGINS=*
 ```
 
 `REVERB_HOST`, `REVERB_PORT` y `REVERB_SCHEME` son la dirección que usa Laravel para enviar eventos.
 `REVERB_SERVER_HOST` y `REVERB_SERVER_PORT` indican dónde escucha el servidor. En producción, configura
-TLS y restringe los orígenes permitidos en `config/reverb.php`.
+TLS y restringe los orígenes con `REVERB_ALLOWED_ORIGINS` (los hosts de la app, separados por comas).
+
+`.env.example` trae `BROADCAST_CONNECTION=log`, para que el proyecto funcione sin el servidor de Reverb: los
+eventos solo se escriben en el log. Cámbialo a `reverb` cuando quieras probar el tiempo real.
 
 ## Canales privados
 

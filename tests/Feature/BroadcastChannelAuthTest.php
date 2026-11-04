@@ -99,6 +99,16 @@ class BroadcastChannelAuthTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_the_chat_channel_is_closed_if_the_other_participant_is_suspended(): void
+    {
+        $participant = User::factory()->create();
+        $suspended = User::factory()->create(['suspended_at' => now()]);
+        $matchId = $this->createMatch($participant, $suspended);
+
+        $this->authorizeChannel($participant, "private-chat.{$matchId}")
+            ->assertForbidden();
+    }
+
     public function test_a_user_can_only_authorize_their_own_private_user_channel(): void
     {
         $user = User::factory()->create();
