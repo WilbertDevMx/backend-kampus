@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | URL de la app (Expo web). Los enlaces de los correos, como el de
+    | verificación, abren una pantalla del frontend y no la API.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:8081'),
+
 ];
