@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Discovery\DiscoveryFilters;
 use App\Http\Resources\ProfileResource;
 use Illuminate\Http\Request;
 
@@ -21,12 +22,18 @@ class ProfileController extends Controller
             'birthdate' => ['sometimes', 'nullable', 'date', 'before:today'],
             'bio' => ['sometimes', 'nullable', 'string', 'max:300'],
             'zone_id' => ['sometimes', 'nullable', 'integer', 'exists:zones,id'],
-            'nearby_enabled' => ['sometimes', 'boolean'],
-            'discovery_filters' => ['sometimes', 'nullable', 'array'],
+            // "Cerca de ti" solo se activa con su celda y se desactiva borrándola: va por /location/nearby (T-28).
+            'discovery_filters' => ['sometimes', 'nullable', 'array:universities,career,interests'],
+            ...DiscoveryFilters::rules('discovery_filters.'),
         ]);
 
         if ($validated === []) {
             abort(422, 'Debes enviar al menos un dato de perfil.');
+        }
+
+        // Mismo formato que guarda PUT /discover/filters (RF-06).
+        if (isset($validated['discovery_filters'])) {
+            $validated['discovery_filters'] = DiscoveryFilters::fromArray($validated['discovery_filters'])->toArray();
         }
 
         if (array_key_exists('name', $validated)) {

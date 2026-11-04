@@ -21,12 +21,13 @@ jobs:
         with:
           node-version: 24
 
-      # Solo se usa aquí: se instala sin guardarse en package.json para no tocar las dependencias de la app.
+      # Se instala de forma global: así npm no resuelve las dependencias de la app (package.json), que no
+      # hacen falta aquí y pueden fallar por un paquete roto, y commitlint encuentra config-conventional igual.
       - name: Instalar commitlint
-        run: npm install --no-save --no-package-lock --no-audit --no-fund @commitlint/cli@21.2.3 @commitlint/config-conventional@21.2.3
+        run: npm install --global --no-audit --no-fund @commitlint/cli@21.2.3 @commitlint/config-conventional@21.2.3
 
       - name: Revisar los commits del PR
         run: >-
-          npx --no-install commitlint --verbose
+          commitlint --verbose
           --from ${{ github.event.pull_request.base.sha }}
           --to ${{ github.event.pull_request.head.sha }}

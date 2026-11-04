@@ -93,6 +93,26 @@ class LoginApiTest extends TestCase
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
+    public function test_suspended_user_cannot_log_in(): void
+    {
+        User::factory()->create(['email' => 'alumno@utt.edu.mx', 'suspended_at' => now()]);
+
+        $this->login('alumno@utt.edu.mx')
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Tu cuenta está suspendida.');
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_a_wrong_password_on_a_suspended_account_does_not_reveal_the_suspension(): void
+    {
+        User::factory()->create(['email' => 'alumno@utt.edu.mx', 'suspended_at' => now()]);
+
+        $this->login('alumno@utt.edu.mx', 'incorrecta')
+            ->assertUnprocessable()
+            ->assertInvalid(['email' => 'Las credenciales no son correctas.']);
+    }
+
     public function test_account_is_locked_after_five_failed_attempts(): void
     {
         User::factory()->create(['email' => 'alumno@utt.edu.mx']);

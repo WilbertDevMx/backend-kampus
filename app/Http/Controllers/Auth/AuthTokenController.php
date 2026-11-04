@@ -26,6 +26,13 @@ class AuthTokenController extends Controller
             ], 403);
         }
 
+        // RF-15 y RF-22: una cuenta suspendida por moderación o un staff desactivado no recibe token.
+        if ($user->suspended_at !== null) {
+            return response()->json([
+                'message' => 'Tu cuenta está suspendida.',
+            ], 403);
+        }
+
         $expiresAt = now()->addMinutes(config('sanctum.expiration'));
         $token = $user->createToken($request->input('device_name', 'api'), ['*'], $expiresAt);
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -12,8 +13,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 // `role` no es asignable en masa a propósito: el registro público nunca puede crear staff (RF-22).
@@ -35,6 +38,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifyEmailNotification);
+    }
+
+    /**
+     * Lo llama `Password::sendResetLink()`; se reemplaza para mandar el correo en español y por la cola (T-45).
+     *
+     * @param  string  $token
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /**
@@ -103,5 +116,32 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->where('university_id', $actor->university_id),
             UserRole::Student => $query->whereRaw('1 = 0'),
         };
+    }
+
+    /**
+     * Estudiantes que `$viewer` puede ver en el descubrimiento y evaluar (RF-05): con correo verificado,
+     * sin suspensión, con perfil y sin bloqueo en ningún sentido (RF-13). Nunca incluye al staff ni a
+     * `$viewer`. Los perfiles que ya evaluó los quita `App\Discovery\DiscoveryQuery`.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeDiscoverableBy(Builder $query, User $viewer): void
+    {
+        $viewerId = $viewer->getKey();
+
+        $query->whereKeyNot($viewerId)
+            ->where('users.role', UserRole::Student)
+            ->whereNotNull('users.email_verified_at')
+            ->whereNull('users.suspended_at')
+            ->whereHas('profile')
+            ->whereNotExists(fn (QueryBuilder $blocks) => $blocks->select(DB::raw(1))
+                ->from('blocks')
+                ->where(fn (QueryBuilder $pair) => $pair
+                    ->where(fn (QueryBuilder $byViewer) => $byViewer
+                        ->where('blocks.blocker_id', $viewerId)
+                        ->whereColumn('blocks.blocked_id', 'users.id'))
+                    ->orWhere(fn (QueryBuilder $byOther) => $byOther
+                        ->whereColumn('blocks.blocker_id', 'users.id')
+                        ->where('blocks.blocked_id', $viewerId))));
     }
 }
