@@ -14,25 +14,37 @@ x-api: &api
     - logs:/var/www/html/storage/logs
 
 services:
-  # Entrada pública con HTTPS automático (Let's Encrypt).
-  caddy:
-    image: caddy:2.10-alpine
+  # Entrada pública: HTTPS, PHP-FPM y el WebSocket. Arranca con un certificado autofirmado temporal
+  # hasta que certbot saca el de Let's Encrypt (ver el README).
+  nginx:
+    build: ./docker/nginx
+    image: kampus-nginx
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
-      - "443:443/udp"
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./public:/var/www/html/public:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    depends_on:
+      - app
+      - reverb
+
+  # Renueva el certificado de Let's Encrypt cada 12 horas (solo lo cambia cuando le faltan menos de
+  # 30 días). El primer certificado se saca a mano con el comando del README.
+  certbot:
+    image: certbot/certbot:v3.0.1
+    restart: unless-stopped
     environment:
       API_DOMAIN: ${API_DOMAIN}
       ACME_EMAIL: ${ACME_EMAIL}
     volumes:
-      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./public:/var/www/html/public:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - app
-      - reverb
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 43200 & wait $${!}; done"]
 
   # PHP-FPM con la API.
   app:
@@ -48,7 +60,7 @@ services:
     <<: *api
     command: ["php", "artisan", "schedule:work"]
 
-  # Servidor de WebSocket (T-13). Solo escucha en la red interna; Caddy lo publica por /app.
+  # Servidor de WebSocket (T-13). Solo escucha en la red interna; Nginx lo publica por /app.
   reverb:
     <<: *api
     command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
@@ -71,5 +83,5 @@ services:
 volumes:
   pgdata:
   logs:
-  caddy_data:
-  caddy_config:
+  certbot_conf:
+  certbot_www:

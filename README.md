@@ -127,7 +127,8 @@ El entorno de pruebas (T-24) corre en **un solo servidor de AWS (EC2) con Docker
 
 | Servicio | Qué hace |
 |---|---|
-| `caddy` | Entrada pública. Saca y renueva solo el certificado HTTPS (Let's Encrypt) y manda `/app` al WebSocket y lo demás a PHP |
+| `nginx` | Entrada pública con HTTPS. Manda `/app` al WebSocket y lo demás a PHP |
+| `certbot` | Renueva el certificado de Let's Encrypt; Nginx toma el nuevo solo cada 6 horas |
 | `app` | La API (PHP-FPM 8.3) |
 | `queue` | La cola: correos de verificación y recuperación, y eventos como `match.created` |
 | `scheduler` | Las tareas programadas de Laravel |
@@ -155,13 +156,22 @@ docker compose -f compose.prod.yaml --env-file .env.production up -d --build db 
 docker compose -f compose.prod.yaml --env-file .env.production exec app php artisan migrate --force
 docker compose -f compose.prod.yaml --env-file .env.production exec app php artisan db:seed --class=CatalogSeeder --force
 docker compose -f compose.prod.yaml --env-file .env.production exec app php artisan db:seed --class=ZoneSeeder --force
-docker compose -f compose.prod.yaml --env-file .env.production up -d
+docker compose -f compose.prod.yaml --env-file .env.production up -d --build
 docker compose -f compose.prod.yaml --env-file .env.production exec app php artisan kampus:create-admin
 ```
 
 - La llave que imprime `key:generate --show` se copia en `APP_KEY` antes del `up`.
 - La primera vez se levantan solo `db` y `app` para migrar: la cola y el scheduler fallan si arrancan antes de que existan las tablas.
 - En producción **no** se corre `db:seed` sin `--class`: `DatabaseSeeder` crea un usuario de prueba.
+
+**Certificado HTTPS (solo la primera vez).** Nginx arranca con un certificado autofirmado temporal. Con el DNS ya apuntando al servidor, saca el de Let's Encrypt y recarga Nginx:
+
+```bash
+docker compose -f compose.prod.yaml --env-file .env.production run --rm --entrypoint sh certbot -c 'certbot certonly --webroot -w /var/www/certbot -d "$API_DOMAIN" --email "$ACME_EMAIL" --agree-tos --no-eff-email'
+docker compose -f compose.prod.yaml --env-file .env.production exec nginx kampus-reload
+```
+
+Desde ahí, `certbot` lo renueva solo y Nginx toma el nuevo cada 6 horas. Si el primer comando falla, revisa que el registro DNS ya apunte a la IP elástica y que el puerto 80 esté abierto.
 
 Para actualizar: `git pull` y el mismo `up -d --build`, y luego `migrate --force`.
 
