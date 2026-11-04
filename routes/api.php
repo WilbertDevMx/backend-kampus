@@ -18,6 +18,8 @@ use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\RecoverPasswordController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SwipeController;
+use App\Http\Controllers\UserLocationController;
+use App\Http\Controllers\ZoneController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +63,15 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
             ->middleware('throttle:10,1');
         Route::delete('/profile/photos/{photo}', [ProfilePhotoController::class, 'destroy'])
             ->whereNumber('photo');
+
+        // Zonas y ubicación aproximada: nunca se recibe ni se guarda una coordenada (T-28, RF-18, RNF-11).
+        Route::get('/zones', [ZoneController::class, 'index'])->name('zones.index');
+        Route::get('/location', [UserLocationController::class, 'show'])->name('location.show');
+        Route::put('/location/zone', [UserLocationController::class, 'updateZone'])->name('location.zone');
+        Route::put('/location/nearby', [UserLocationController::class, 'enableNearby'])
+            ->middleware('throttle:30,1')
+            ->name('location.nearby.enable');
+        Route::delete('/location/nearby', [UserLocationController::class, 'disableNearby'])->name('location.nearby.disable');
 
         // Descubrimiento, filtros y swipe (T-09, RF-05 y RF-06).
         Route::get('/discover', [DiscoveryController::class, 'index'])->name('discover.index');
