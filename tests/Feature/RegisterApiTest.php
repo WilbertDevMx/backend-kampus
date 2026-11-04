@@ -154,6 +154,7 @@ class RegisterApiTest extends TestCase
             'verification.verify',
             now()->addMinutes(60),
             ['id' => $user->id, 'hash' => sha1($user->email)],
+            absolute: false,
         );
 
         $this->getJson($verificationUrl)
@@ -161,6 +162,35 @@ class RegisterApiTest extends TestCase
             ->assertJsonPath('message', 'Correo verificado correctamente.');
 
         $this->assertNotNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_verification_email_links_to_the_frontend_and_its_params_verify_the_user(): void
+    {
+        config(['app.frontend_url' => 'http://app.test']);
+        $user = User::factory()->create();
+        $user->forceFill(['email_verified_at' => null])->save();
+
+        $mail = (new VerifyEmailNotification)->toMail($user);
+
+        $this->assertStringStartsWith('http://app.test/auth/verify-email?', $mail->actionUrl);
+
+        // Lo mismo que hace la pantalla del frontend: arma la llamada a la API con los parámetros.
+        parse_str((string) parse_url($mail->actionUrl, PHP_URL_QUERY), $params);
+        $query = http_build_query(['expires' => $params['expires'], 'signature' => $params['signature']]);
+
+        $this->getJson("/api/email/verify/{$params['id']}/{$params['hash']}?{$query}")->assertOk();
+        $this->assertNotNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_verification_rejects_a_tampered_signature(): void
+    {
+        $user = User::factory()->create();
+        $user->forceFill(['email_verified_at' => null])->save();
+        $hash = sha1($user->email);
+
+        $this->getJson("/api/email/verify/{$user->id}/{$hash}?expires=".now()->addHour()->timestamp.'&signature=falsa')
+            ->assertForbidden();
+        $this->assertNull($user->fresh()->email_verified_at);
     }
 
     public function test_verification_rejects_a_hash_for_a_different_email(): void
@@ -171,6 +201,7 @@ class RegisterApiTest extends TestCase
             'verification.verify',
             now()->addMinutes(60),
             ['id' => $user->id, 'hash' => sha1('other@utt.edu.mx')],
+            absolute: false,
         );
 
         $this->getJson($verificationUrl)->assertForbidden();

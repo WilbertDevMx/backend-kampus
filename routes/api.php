@@ -25,8 +25,10 @@ Route::post('/register', [RegisterController::class, 'store'])
     ->middleware('throttle:6,1')
     ->name('auth.register');
 
+// El correo abre la pantalla del frontend, que llama aquí con `expires` y `signature`. La firma es
+// relativa para que no dependa del host con que la app llama a la API (localhost, IP de la red, etc.).
 Route::get('/email/verify/{id}/{hash}', EmailVerificationController::class)
-    ->middleware('signed')
+    ->middleware('signed:relative')
     ->name('verification.verify');
 
 Route::post('/login', [AuthTokenController::class, 'store'])->name('auth.login');
