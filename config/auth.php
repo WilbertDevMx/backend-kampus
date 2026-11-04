@@ -101,6 +101,9 @@ return [
         ],
     ],
 
+    // Pantalla de la app que abre el enlace del correo de recuperación (T-45). La API le agrega `token` y `email`.
+    'password_reset_url' => env('PASSWORD_RESET_URL', 'http://localhost:8081/auth/reset-password'),
+
     /*
     |--------------------------------------------------------------------------
     | Password Confirmation Timeout
