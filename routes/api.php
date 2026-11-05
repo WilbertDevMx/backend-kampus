@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\GroupReviewController;
 use App\Http\Controllers\Admin\OfficialGroupController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Auth\AuthTokenController;
+use App\Http\Controllers\BlockController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\DiscoveryFilterController;
 use App\Http\Controllers\EmailVerificationController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\ProfileInterestController;
 use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\RecoverPasswordController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\UserLocationController;
 use App\Http\Controllers\ZoneController;
@@ -83,6 +85,12 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
         // Matches (T-10, RF-07).
         Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
+
+        // Bloqueo y reporte de usuarios (T-21, RF-13 y RF-14).
+        Route::get('/blocks', [BlockController::class, 'index'])->name('blocks.index');
+        Route::post('/blocks', [BlockController::class, 'store'])->name('blocks.store');
+        Route::delete('/blocks/{user}', [BlockController::class, 'destroy'])->whereNumber('user')->name('blocks.destroy');
+        Route::post('/reports', [ReportController::class, 'store'])->middleware('throttle:10,1')->name('reports.store');
 
         // Grupos: explorar, crear, unirse y actividades (T-17, RF-11 y RF-12).
         Route::prefix('groups')
