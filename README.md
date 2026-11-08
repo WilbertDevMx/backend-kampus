@@ -121,6 +121,65 @@ Cada cuenta tiene un rol en `users.role`: `student`, `moderator` (una sola unive
 | `Admin\StaffController` | `app/Http/Controllers/Admin` | `/api/admin/staff`, solo para administradores: lista, alta y desactivación o reactivación de staff. Las cuentas se desactivan (`suspended_at`), no se borran, y el login rechaza las cuentas suspendidas |
 | `ModerationAction` | `app/Models` | Bitácora inmutable `moderation_actions`: quién hizo qué, sobre quién y con qué motivo (obligatorio) |
 
+## Despliegue (entorno de pruebas)
+
+El entorno de pruebas (T-24) corre en **un solo servidor de AWS (EC2) con Docker**. Todo está en `compose.prod.yaml`:
+
+| Servicio | Qué hace |
+|---|---|
+| `nginx` | Entrada pública con HTTPS. Manda `/app` al WebSocket y lo demás a PHP |
+| `certbot` | Renueva el certificado de Let's Encrypt; Nginx toma el nuevo solo cada 6 horas |
+| `app` | La API (PHP-FPM 8.3) |
+| `queue` | La cola: correos de verificación y recuperación, y eventos como `match.created` |
+| `scheduler` | Las tareas programadas de Laravel |
+| `reverb` | El WebSocket (T-13); solo se ve dentro de la red de Docker |
+| `db` | PostgreSQL 16, con los datos en el volumen `pgdata` |
+
+Las imágenes se guardan en **S3** y los correos salen por **Resend**.
+
+### Antes de desplegar (una sola vez)
+
+1. **Servidor:** una instancia EC2 con Ubuntu 24.04 y al menos 2 GB de RAM (`t3.small` o `t4g.small`), con IP elástica. En su grupo de seguridad, abre solo 22 (SSH), 80 y 443.
+2. **Dominio:** un registro DNS `A` del dominio de la API (por ejemplo `api.ejemplo.com`) a la IP elástica.
+3. **S3:** un bucket **privado** (con "Block all public access" activado) y un usuario de IAM con permiso solo sobre ese bucket (`s3:GetObject`, `s3:PutObject` y `s3:DeleteObject`). Sus llaves van en `.env.production`; nunca uses las de la cuenta.
+4. **Resend:** verifica el dominio (agrega los registros DNS que da Resend) y crea una API key con permiso **solo de envío**. Sin un dominio verificado, Resend solo entrega correos a la cuenta dueña, así que no llegarían los de verificación a los alumnos.
+
+### Desplegar
+
+En el servidor, con Docker instalado:
+
+```bash
+git clone https://github.com/WilbertDevMx/backend-kampus.git && cd backend-kampus
+cp .env.production.example .env.production   # y llena los valores marcados con <...>
+docker compose -f compose.prod.yaml --env-file .env.production run --rm app php artisan key:generate --show
+docker compose -f compose.prod.yaml --env-file .env.production up -d --build db app
+docker compose -f compose.prod.yaml --env-file .env.production exec app php artisan migrate --force
+docker compose -f compose.prod.yaml --env-file .env.production exec app php artisan db:seed --class=CatalogSeeder --force
+docker compose -f compose.prod.yaml --env-file .env.production exec app php artisan db:seed --class=ZoneSeeder --force
+docker compose -f compose.prod.yaml --env-file .env.production up -d --build
+docker compose -f compose.prod.yaml --env-file .env.production exec app php artisan kampus:create-admin
+```
+
+- La llave que imprime `key:generate --show` se copia en `APP_KEY` antes del `up`.
+- La primera vez se levantan solo `db` y `app` para migrar: la cola y el scheduler fallan si arrancan antes de que existan las tablas.
+- En producción **no** se corre `db:seed` sin `--class`: `DatabaseSeeder` crea un usuario de prueba.
+
+**Certificado HTTPS (solo la primera vez).** Nginx arranca con un certificado autofirmado temporal. Con el DNS ya apuntando al servidor, saca el de Let's Encrypt y recarga Nginx:
+
+```bash
+docker compose -f compose.prod.yaml --env-file .env.production run --rm --entrypoint sh certbot -c 'certbot certonly --webroot -w /var/www/certbot -d "$API_DOMAIN" --email "$ACME_EMAIL" --agree-tos --no-eff-email'
+docker compose -f compose.prod.yaml --env-file .env.production exec nginx kampus-reload
+```
+
+Desde ahí, `certbot` lo renueva solo y Nginx toma el nuevo cada 6 horas. Si el primer comando falla, revisa que el registro DNS ya apunte a la IP elástica y que el puerto 80 esté abierto.
+
+Para actualizar: `git pull` y el mismo `up -d --build`, y luego `migrate --force`.
+
+### Monitoreo básico
+
+- `https://<dominio>/up` responde `200` mientras la API está arriba. Regístralo en un monitor externo gratuito (por ejemplo, UptimeRobot) para recibir un aviso si se cae.
+- Logs: `docker compose -f compose.prod.yaml logs -f app queue reverb`. Los de Laravel, incluido `security.log`, quedan en el volumen `logs`.
+
 ## Integración continua
 
 Cada push y cada Pull Request hacia `main` o `develop` ejecuta automáticamente:
