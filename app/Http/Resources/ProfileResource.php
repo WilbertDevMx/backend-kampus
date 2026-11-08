@@ -26,6 +26,7 @@ class ProfileResource extends JsonResource
                 'career' => $profile->career,
                 'semester' => $profile->semester,
                 'birthdate' => $profile->birthdate?->toDateString(),
+                'gender' => $profile->gender?->value,
                 'bio' => $profile->bio,
                 'zone_id' => $profile->zone_id,
                 'nearby_enabled' => $profile->nearby_enabled,
@@ -35,6 +36,11 @@ class ProfileResource extends JsonResource
                     'name' => $interest->name,
                     'category' => $interest->category,
                 ])->values(),
+                // Perfil obligatorio (T-49): la app pide los pasos de `missing`, en ese orden.
+                'completion' => [
+                    'completed' => $profile->completed_at !== null,
+                    'missing' => $profile->missingSteps(),
+                ],
                 'photos' => $profile->photos->map(fn ($photo): array => [
                     'id' => $photo->id,
                     'position' => $photo->position,

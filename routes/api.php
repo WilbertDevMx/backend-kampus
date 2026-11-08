@@ -78,10 +78,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::delete('/location/nearby', [UserLocationController::class, 'disableNearby'])->name('location.nearby.disable');
 
         // Descubrimiento, filtros y swipe (T-09, RF-05 y RF-06).
-        Route::get('/discover', [DiscoveryController::class, 'index'])->name('discover.index');
+        Route::get('/discover', [DiscoveryController::class, 'index'])->middleware('profile.complete')->name('discover.index');
         Route::get('/discover/filters', [DiscoveryFilterController::class, 'show'])->name('discover.filters.show');
         Route::put('/discover/filters', [DiscoveryFilterController::class, 'update'])->name('discover.filters.update');
-        Route::post('/swipes', [SwipeController::class, 'store'])->name('swipes.store');
+        Route::post('/swipes', [SwipeController::class, 'store'])->middleware('profile.complete')->name('swipes.store');
 
         // Matches (T-10, RF-07).
         Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');

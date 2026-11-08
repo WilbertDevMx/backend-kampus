@@ -133,7 +133,8 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('users.role', UserRole::Student)
             ->whereNotNull('users.email_verified_at')
             ->whereNull('users.suspended_at')
-            ->whereHas('profile')
+            // Solo perfiles completos (T-49): nombre, edad, género, estudios, intereses, foto y bio.
+            ->whereHas('profile', fn (Builder $profile) => $profile->whereNotNull('profiles.completed_at'))
             ->whereNotExists(fn (QueryBuilder $blocks) => $blocks->select(DB::raw(1))
                 ->from('blocks')
                 ->where(fn (QueryBuilder $pair) => $pair
