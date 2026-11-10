@@ -104,9 +104,23 @@ Una tarea se considera terminada cuando:
 php artisan test                 # Ejecuta las pruebas
 ./vendor/bin/pint                # Corrige el formato del código
 ./vendor/bin/pint --test         # Solo revisa el formato (lo mismo que hace CI)
-php artisan migrate:fresh --seed # Reinicia la base de datos con datos de prueba
+php artisan migrate:fresh --seed # Reinicia la base de datos con catálogos y datos de demostración
+php artisan db:seed --class=DemoSeeder # Solo vuelve a crear los datos de demostración
 php artisan kampus:create-admin  # Crea el primer administrador (correo institucional)
 ```
+
+## Datos de demostración
+
+`DemoSeeder` (T-34) crea **67 estudiantes ficticios**: 22 por universidad y una cuenta para presentar. Necesita los catálogos (`CatalogSeeder` y `ZoneSeeder`), y `migrate:fresh --seed` los corre en orden.
+
+- Todos tienen el correo verificado y el perfil completo: carrera, semestre, edad de 18 a 25, bio, de 3 a 5 intereses, 1 o 2 fotos y una zona (su campus o una colonia de Torreón).
+- Más o menos la mitad tiene **Cerca de ti** activo, con una celda cerca de su zona, para demostrar la vista Cerca.
+- Las fotos son siluetas dibujadas por el propio seeder: no hay fotos de personas reales ni licencias de terceros.
+- **Cuenta para presentar:** `demo@demo.kampus.test`. Ya tiene 3 matches, y 8 personas le dieron "Me interesa": al evaluarlas en Descubrir, el match sale al momento.
+- Los correos usan el dominio `demo.kampus.test`, que nunca recibe correo.
+- La contraseña de todas las cuentas es `DEMO_PASSWORD`. Si no está definida, cada corrida genera una nueva y la muestra en la consola.
+- Se puede correr varias veces: borra los usuarios de demostración anteriores y sus fotos, y no toca a nadie más.
+- **Nunca corre con `APP_ENV=production`**, salvo en el entorno de pruebas con `DEMO_DATA_ENABLED=true`.
 
 ## Roles
 
