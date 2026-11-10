@@ -16,6 +16,7 @@ use App\Http\Controllers\Groups\GroupController;
 use App\Http\Controllers\Groups\GroupImageController;
 use App\Http\Controllers\Groups\GroupMembershipController;
 use App\Http\Controllers\MatchController;
+use App\Http\Controllers\NearbyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileInterestController;
 use App\Http\Controllers\ProfilePhotoController;
@@ -109,6 +110,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('/discover', [DiscoveryController::class, 'index'])->name('discover.index');
         Route::get('/discover/filters', [DiscoveryFilterController::class, 'show'])->name('discover.filters.show');
         Route::put('/discover/filters', [DiscoveryFilterController::class, 'update'])->name('discover.filters.update');
+        // Vista "Cerca" (T-35, RF-19): quién está cerca, en el centro de su zona y a qué distancia aproximada.
+        Route::get('/discover/nearby', [NearbyController::class, 'index'])
+            ->middleware('throttle:30,1')
+            ->name('discover.nearby');
         Route::post('/swipes', [SwipeController::class, 'store'])->name('swipes.store');
 
         // Matches (T-10, RF-07).
