@@ -36,6 +36,9 @@ class AuthTokenController extends Controller
         $expiresAt = now()->addMinutes(config('sanctum.expiration'));
         $token = $user->createToken($request->input('device_name', 'api'), ['*'], $expiresAt);
 
+        // Para la lista de sesiones (T-46): desde qué navegador o app se inició sesión.
+        $token->accessToken->forceFill(['user_agent' => mb_substr((string) $request->userAgent(), 0, 255) ?: null])->save();
+
         return response()->json([
             'token' => $token->plainTextToken,
             'token_type' => 'Bearer',

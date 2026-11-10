@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\GroupReviewController;
 use App\Http\Controllers\Admin\OfficialGroupController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Auth\AuthTokenController;
+use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\BlockController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\DiscoveryFilterController;
@@ -56,6 +57,16 @@ Route::post('/reset-password', [RecoverPasswordController::class, 'reset'])
 // Rutas de usuario: requieren token y correo verificado (RF-01).
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()))->name('user.show');
+
+    // Gestión de sesiones (T-46): para estudiantes y staff. Cada quien solo ve y cierra las suyas.
+    Route::get('/sessions', [SessionController::class, 'index'])->name('sessions.index');
+    Route::delete('/sessions', [SessionController::class, 'destroyOthers'])
+        ->middleware('throttle:10,1')
+        ->name('sessions.destroy-others');
+    Route::delete('/sessions/{session}', [SessionController::class, 'destroy'])
+        ->whereNumber('session')
+        ->middleware('throttle:30,1')
+        ->name('sessions.destroy');
 
     // Funciones sociales: solo estudiantes. El staff no tiene perfil y solo usa el panel (RF-22).
     Route::middleware('role:student')->group(function () {
