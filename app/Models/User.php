@@ -33,6 +33,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Celda de ~1 km de "Cerca de ti" (T-28). Solo existe mientras la función está activa.
+     */
+    public function location(): HasOne
+    {
+        return $this->hasOne(UserLocation::class);
+    }
+
+    /**
      * Lo llama el listener de `Registered`; se reemplaza para mandar el correo por la cola.
      */
     public function sendEmailVerificationNotification(): void

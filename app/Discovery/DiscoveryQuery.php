@@ -28,6 +28,9 @@ final class DiscoveryQuery
 
     private ?DiscoveryRanking $ranking = null;
 
+    /** @var list<string>|null */
+    private ?array $cellPrefixes = null;
+
     private function __construct(private readonly User $viewer) {}
 
     public static function for(User $viewer): self
@@ -72,6 +75,19 @@ final class DiscoveryQuery
         return $this;
     }
 
+    /**
+     * Vista "Cerca" (T-35): solo quien tiene "Cerca de ti" activo y su celda empieza con alguno de los
+     * prefijos de geohash (la zona del que consulta y sus vecinas).
+     *
+     * @param  list<string>  $prefixes
+     */
+    public function inCells(array $prefixes): self
+    {
+        $this->cellPrefixes = $prefixes;
+
+        return $this;
+    }
+
     public function rankedBy(DiscoveryRanking $ranking): self
     {
         $this->ranking = $ranking;
@@ -109,6 +125,15 @@ final class DiscoveryQuery
                 ->whereIn('interests.id', $this->interestIds));
         }
 
+        if ($this->cellPrefixes !== null) {
+            $query->whereHas('profile', fn (Builder $profile) => $profile->where('profiles.nearby_enabled', true))
+                ->whereHas('location', fn (Builder $location) => $location->where(
+                    fn (Builder $cells) => collect($this->cellPrefixes)->each(
+                        fn (string $prefix) => $cells->orWhere('user_locations.geohash', 'like', $prefix.'%'),
+                    ),
+                ));
+        }
+
         $this->ranking?->apply($query, $this->viewer);
 
         return $query;
@@ -117,15 +142,17 @@ final class DiscoveryQuery
     /**
      * Siguientes `$limit` perfiles, con todo lo que muestra la tarjeta ya cargado (sin consultas N+1).
      *
+     * @param  list<string>  $extraRelations  Relaciones que necesita otra vista, como "Cerca".
      * @return Collection<int, User>
      */
-    public function take(int $limit): Collection
+    public function take(int $limit, array $extraRelations = []): Collection
     {
         return $this->toQuery()
             ->with([
                 'university',
                 'profile.interests',
                 'profile.photos' => fn ($photos) => $photos->orderBy('position'),
+                ...$extraRelations,
             ])
             ->limit($limit)
             ->get();
