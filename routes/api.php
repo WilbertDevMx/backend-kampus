@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\OfficialGroupController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Auth\AuthTokenController;
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\Auth\TwoFactorLoginController;
 use App\Http\Controllers\BlockController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\DiscoveryFilterController;
@@ -40,6 +42,11 @@ Route::get('/email/verify/{id}/{hash}', EmailVerificationController::class)
 
 Route::post('/login', [AuthTokenController::class, 'store'])->name('auth.login');
 
+// Segundo paso del login cuando la verificación en dos pasos está activa (T-47).
+Route::post('/login/two-factor', TwoFactorLoginController::class)
+    ->middleware('throttle:10,1')
+    ->name('auth.login.two-factor');
+
 Route::post('/logout', [AuthTokenController::class, 'destroy'])
     ->middleware('auth:sanctum')
     ->name('auth.logout');
@@ -66,6 +73,16 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         ->whereNumber('session')
         ->middleware('throttle:30,1')
         ->name('sessions.destroy');
+
+    // Verificación en dos pasos con app de autenticación (T-47): para estudiantes y staff.
+    Route::get('/two-factor', [TwoFactorController::class, 'show'])->name('two-factor.show');
+    Route::middleware('throttle:6,1')->group(function () {
+        Route::post('/two-factor', [TwoFactorController::class, 'store'])->name('two-factor.store');
+        Route::post('/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+        Route::delete('/two-factor', [TwoFactorController::class, 'destroy'])->name('two-factor.destroy');
+        Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])
+            ->name('two-factor.recovery-codes');
+    });
 
     // Funciones sociales: solo estudiantes. El staff no tiene perfil y solo usa el panel (RF-22).
     Route::middleware('role:student')->group(function () {

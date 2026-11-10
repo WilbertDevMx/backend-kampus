@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Resources\UserResource;
+use App\Support\Security\AccessTokenIssuer;
+use App\Support\Security\TwoFactorChallenge;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,7 +16,7 @@ class AuthTokenController extends Controller
     /**
      * Inicia sesión y emite un token de Sanctum con fecha de expiración (RF-02).
      */
-    public function store(LoginRequest $request): JsonResponse
+    public function store(LoginRequest $request, AccessTokenIssuer $issuer, TwoFactorChallenge $challenges): JsonResponse
     {
         $user = $request->authenticate();
 
@@ -33,18 +34,20 @@ class AuthTokenController extends Controller
             ], 403);
         }
 
-        $expiresAt = now()->addMinutes(config('sanctum.expiration'));
-        $token = $user->createToken($request->input('device_name', 'api'), ['*'], $expiresAt);
+        $deviceName = $request->input('device_name', 'api');
 
-        // Para la lista de sesiones (T-46): desde qué navegador o app se inició sesión.
-        $token->accessToken->forceFill(['user_agent' => mb_substr((string) $request->userAgent(), 0, 255) ?: null])->save();
+        // T-47: con la verificación en dos pasos activa, la contraseña sola no basta. En lugar del token se
+        // responde un reto que se completa con el código de la app en POST /api/login/two-factor.
+        if ($user->hasTwoFactorEnabled()) {
+            return response()->json([
+                'message' => 'Escribe el código de tu app de autenticación.',
+                'two_factor_required' => true,
+                'challenge_token' => $challenges->create($user, $deviceName),
+                'expires_in' => TwoFactorChallenge::TTL_SECONDS,
+            ]);
+        }
 
-        return response()->json([
-            'token' => $token->plainTextToken,
-            'token_type' => 'Bearer',
-            'expires_at' => $expiresAt->toIso8601String(),
-            'user' => new UserResource($user),
-        ], 201);
+        return $issuer->issue($user, $request, $deviceName);
     }
 
     /**

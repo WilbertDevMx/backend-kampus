@@ -21,7 +21,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 // `role` no es asignable en masa a propósito: el registro público nunca puede crear staff (RF-22).
 #[Fillable(['name', 'email', 'password', 'university_id'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -71,7 +71,19 @@ class User extends Authenticatable implements MustVerifyEmail
             'suspended_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            // Verificación en dos pasos (T-47): el secreto y los códigos de respaldo se guardan cifrados.
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * La verificación en dos pasos solo cuenta como activa cuando el usuario la confirmó con un código (T-47).
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_secret !== null && $this->two_factor_confirmed_at !== null;
     }
 
     /**
