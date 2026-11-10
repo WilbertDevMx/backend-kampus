@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -13,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        ['prefix' => 'api', 'middleware' => ['api', 'auth:sanctum', 'verified']],
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         // Detrás de Nginx: confía solo en los proxies indicados para leer la IP real y el esquema HTTPS.
         $middleware->trustProxies(at: array_filter(explode(',', (string) env('TRUSTED_PROXIES', '127.0.0.1'))));
@@ -22,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Global, para que las cabeceras también salgan en respuestas de error (401, 403, 429...).
         $middleware->append(SecurityHeaders::class);
+
+        // Acceso por rol (T-40): `role:student` en rutas sociales y `role:moderator,admin` en el panel.
+        $middleware->alias(['role' => EnsureUserHasRole::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

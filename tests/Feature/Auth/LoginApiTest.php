@@ -26,7 +26,8 @@ class LoginApiTest extends TestCase
             ->assertJsonPath('token_type', 'Bearer')
             ->assertJsonPath('user.id', $user->id)
             ->assertJsonPath('user.email', 'alumno@utt.edu.mx')
-            ->assertJsonStructure(['token', 'token_type', 'expires_at', 'user' => ['id', 'name', 'email', 'email_verified_at']])
+            ->assertJsonPath('user.role', 'student')
+            ->assertJsonStructure(['token', 'token_type', 'expires_at', 'user' => ['id', 'name', 'email', 'email_verified_at', 'role', 'university_id']])
             ->assertJsonMissingPath('user.password');
 
         $this->assertDatabaseHas('personal_access_tokens', [
@@ -45,7 +46,8 @@ class LoginApiTest extends TestCase
         $this->withToken($token)
             ->getJson('/api/user')
             ->assertOk()
-            ->assertJsonPath('data.email', 'alumno@utt.edu.mx');
+            ->assertJsonPath('data.email', 'alumno@utt.edu.mx')
+            ->assertJsonPath('data.role', 'student');
     }
 
     public function test_email_is_matched_case_insensitively(): void
@@ -89,6 +91,26 @@ class LoginApiTest extends TestCase
             ->assertJsonPath('message', 'Verifica tu correo institucional antes de iniciar sesión.');
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_suspended_user_cannot_log_in(): void
+    {
+        User::factory()->create(['email' => 'alumno@utt.edu.mx', 'suspended_at' => now()]);
+
+        $this->login('alumno@utt.edu.mx')
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Tu cuenta está suspendida.');
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_a_wrong_password_on_a_suspended_account_does_not_reveal_the_suspension(): void
+    {
+        User::factory()->create(['email' => 'alumno@utt.edu.mx', 'suspended_at' => now()]);
+
+        $this->login('alumno@utt.edu.mx', 'incorrecta')
+            ->assertUnprocessable()
+            ->assertInvalid(['email' => 'Las credenciales no son correctas.']);
     }
 
     public function test_account_is_locked_after_five_failed_attempts(): void

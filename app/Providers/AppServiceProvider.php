@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Discovery\Ranking\DiscoveryRanking;
+use App\Discovery\Ranking\SharedInterestsRanking;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -21,7 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Criterio de orden del descubrimiento (Strategy): se cambia aquí sin tocar la consulta.
+        $this->app->bind(DiscoveryRanking::class, SharedInterestsRanking::class);
     }
 
     /**

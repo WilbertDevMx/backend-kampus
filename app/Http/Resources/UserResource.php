@@ -17,6 +17,9 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
+            // La app usa el rol para elegir la vista: estudiante o panel de administración (T-40).
+            'role' => $this->role->value,
+            'university_id' => $this->university_id,
         ];
     }
 }

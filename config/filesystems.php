@@ -15,6 +15,11 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'profile_photos_disk' => env('PROFILE_PHOTOS_DISK', 's3'),
+
+    // Imágenes de los grupos (T-17): también en el bucket privado, con URL firmada.
+    'group_images_disk' => env('GROUP_IMAGES_DISK', 's3'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -53,6 +58,7 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
+            'visibility' => 'private',
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
