@@ -68,7 +68,11 @@ class ModerationSchemaTest extends TestCase
 
     public function test_the_moderation_migrations_can_be_rolled_back(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 2])->assertSuccessful();
+        // Por ruta, no por `--step`: así la prueba no depende de que sean las migraciones más nuevas.
+        $this->artisan('migrate:rollback', ['--path' => [
+            'database/migrations/2026_10_20_211127_add_moderation_columns_to_groups_and_reports.php',
+            'database/migrations/2026_10_20_212409_create_moderation_actions_table.php',
+        ]])->assertSuccessful();
 
         $this->assertFalse(Schema::hasTable('moderation_actions'));
         $this->assertFalse(Schema::hasColumn('groups', 'status'));
