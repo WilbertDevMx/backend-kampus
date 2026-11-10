@@ -13,6 +13,7 @@ use App\Http\Controllers\Groups\GroupController;
 use App\Http\Controllers\Groups\GroupImageController;
 use App\Http\Controllers\Groups\GroupMembershipController;
 use App\Http\Controllers\MatchController;
+use App\Http\Controllers\Messages\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileInterestController;
 use App\Http\Controllers\ProfilePhotoController;
@@ -85,6 +86,16 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
         // Matches (T-10, RF-07).
         Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
+        Route::prefix('matches/{match}')
+            ->whereNumber('match')
+            ->name('matches.messages.')
+            ->group(function () {
+                Route::get('/messages', [MessageController::class, 'index'])->name('index');
+                Route::post('/messages', [MessageController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('store');
+                Route::patch('/messages/read', [MessageController::class, 'markRead'])->name('read');
+            });
 
         // Bloqueo y reporte de usuarios (T-21, RF-13 y RF-14).
         Route::get('/blocks', [BlockController::class, 'index'])->name('blocks.index');
