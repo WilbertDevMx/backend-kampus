@@ -36,7 +36,9 @@ class StoreMessageRequest extends FormRequest
             'body.required_without' => 'El mensaje no puede estar vacío.',
             'body.string' => 'El mensaje debe ser texto.',
             'body.max' => 'El mensaje no puede exceder 5000 caracteres.',
-            'image.file' => 'La imagen no se subió correctamente.',
+            // Si el archivo pasa del límite de PHP (6 MB en producción), llega con error y falla `uploaded`.
+            'image.uploaded' => 'La imagen no se pudo subir. Revisa que pese menos de 5 MB.',
+            'image.file' => 'La imagen no se pudo subir. Revisa que pese menos de 5 MB.',
             'image.image' => 'El archivo debe ser una imagen JPG o PNG.',
             'image.mimes' => 'El archivo debe ser una imagen JPG o PNG.',
             'image.max' => 'La imagen no puede pesar más de 5 MB.',

@@ -76,9 +76,10 @@ class MessageController extends Controller
         // guardarlas y nunca se guarda el archivo original.
         try {
             $cleanImage = $sanitizer->sanitize($image);
-        } catch (InvalidArgumentException) {
+        } catch (InvalidArgumentException $error) {
+            // El mensaje del sanitizador ya es para el usuario: imagen dañada, formato o demasiado grande.
             throw ValidationException::withMessages([
-                'image' => 'El archivo no es una imagen válida.',
+                'image' => $error->getMessage(),
             ]);
         }
 
