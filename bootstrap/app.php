@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -29,7 +30,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
 
         // Acceso por rol (T-40): `role:student` en rutas sociales y `role:moderator,admin` en el panel.
-        $middleware->alias(['role' => EnsureUserHasRole::class]);
+        $middleware->alias([
+            'role' => EnsureUserHasRole::class,
+            // Perfil obligatorio (T-49): descubrir y swipe solo con el perfil completo.
+            'profile.complete' => EnsureProfileIsComplete::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

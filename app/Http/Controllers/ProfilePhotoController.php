@@ -63,6 +63,7 @@ class ProfilePhotoController extends Controller
             'path' => $path,
             'position' => $position,
         ]);
+        $profile->syncCompletion();
 
         return (new ProfileResource($user->load(['profile.interests', 'profile.photos'])))
             ->response()
@@ -79,6 +80,8 @@ class ProfilePhotoController extends Controller
         }
 
         $photoRecord->delete();
+        // Sin fotos el perfil vuelve a estar incompleto y sale del descubrimiento (T-49).
+        $profile->syncCompletion();
 
         return new ProfileResource($request->user()->load(['profile.interests', 'profile.photos']));
     }

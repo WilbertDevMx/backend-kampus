@@ -50,6 +50,10 @@ class DemoSeederTest extends TestCase
             $this->assertGreaterThanOrEqual(18, $student->profile->birthdate->age);
             $this->assertGreaterThanOrEqual(3, $student->profile->interests->count());
             $this->assertGreaterThanOrEqual(1, $student->profile->photos->count());
+            // Perfil obligatorio (T-49): con género y marcado como completo.
+            $this->assertNotNull($student->profile->gender);
+            $this->assertSame([], $student->profile->missingSteps());
+            $this->assertNotNull($student->profile->completed_at);
         }
 
         // Las fotos existen en el disco privado y son PNG generados, no fotos de terceros.

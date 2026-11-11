@@ -107,14 +107,14 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::delete('/location/nearby', [UserLocationController::class, 'disableNearby'])->name('location.nearby.disable');
 
         // Descubrimiento, filtros y swipe (T-09, RF-05 y RF-06).
-        Route::get('/discover', [DiscoveryController::class, 'index'])->name('discover.index');
+        Route::get('/discover', [DiscoveryController::class, 'index'])->middleware('profile.complete')->name('discover.index');
         Route::get('/discover/filters', [DiscoveryFilterController::class, 'show'])->name('discover.filters.show');
         Route::put('/discover/filters', [DiscoveryFilterController::class, 'update'])->name('discover.filters.update');
         // Vista "Cerca" (T-35, RF-19): quién está cerca, en el centro de su zona y a qué distancia aproximada.
         Route::get('/discover/nearby', [NearbyController::class, 'index'])
             ->middleware('throttle:30,1')
             ->name('discover.nearby');
-        Route::post('/swipes', [SwipeController::class, 'store'])->name('swipes.store');
+        Route::post('/swipes', [SwipeController::class, 'store'])->middleware('profile.complete')->name('swipes.store');
 
         // Matches (T-10, RF-07).
         Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');

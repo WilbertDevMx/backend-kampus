@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Gender;
 use App\Enums\UserRole;
 use App\Models\Interest;
 use App\Models\Photo;
@@ -234,6 +235,7 @@ class DemoSeeder extends Seeder
             'career' => $this->pick(self::CAREERS[$shortName]),
             'semester' => $this->random->getInt(1, 10),
             'birthdate' => now()->subYears($this->random->getInt(18, 25))->subDays($this->random->getInt(0, 364))->toDateString(),
+            'gender' => $this->genderOf($firstName, $presenter),
             'bio' => $this->pick(self::BIOS),
             'zone_id' => $zone?->getKey(),
             'nearby_enabled' => $nearby,
@@ -250,6 +252,9 @@ class DemoSeeder extends Seeder
             $disk->put($path, DemoAvatar::png($number * 7 + $position), ['visibility' => 'private']);
             Photo::query()->create(['profile_id' => $profile->getKey(), 'path' => $path, 'position' => $position]);
         }
+
+        // Perfil obligatorio (T-49): sin `completed_at` no puede descubrir ni sale en Descubrir.
+        $profile->syncCompletion();
 
         // "Cerca de ti": una celda de ~1 km a menos de ~1.5 km del centro de su zona, como la mandaría el celular.
         if ($nearby && $zone !== null) {
@@ -295,6 +300,19 @@ class DemoSeeder extends Seeder
         Swipe::query()->create(['swiper_id' => $a->getKey(), 'swiped_id' => $b->getKey(), 'liked' => true]);
         Swipe::query()->create(['swiper_id' => $b->getKey(), 'swiped_id' => $a->getKey(), 'liked' => true]);
         UserMatch::query()->create(UserMatch::pairOf($a, $b));
+    }
+
+    /**
+     * Género según el nombre: los primeros 20 de FIRST_NAMES son de mujer. No usa el generador aleatorio
+     * para no cambiar la secuencia de los demás datos.
+     */
+    private function genderOf(string $firstName, bool $presenter): Gender
+    {
+        if ($presenter) {
+            return Gender::PrefieroNoDecir;
+        }
+
+        return array_search($firstName, self::FIRST_NAMES, true) < 20 ? Gender::Mujer : Gender::Hombre;
     }
 
     /**

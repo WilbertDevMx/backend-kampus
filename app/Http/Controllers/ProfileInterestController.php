@@ -25,6 +25,7 @@ class ProfileInterestController extends Controller
 
         $profile = $request->user()->profile()->firstOrCreate([]);
         $profile->interests()->sync($validated['interest_ids']);
+        $profile->syncCompletion();
 
         return new ProfileResource($request->user()->load(['profile.interests', 'profile.photos']));
     }
