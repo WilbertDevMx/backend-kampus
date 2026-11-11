@@ -9,6 +9,7 @@ use App\Http\Resources\AdminGroupResource;
 use App\Models\Group;
 use App\Models\ModerationAction;
 use App\Notifications\GroupReviewedNotification;
+use Dedoc\Scramble\Attributes\Group as ApiGroup;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ use Illuminate\Validation\ValidationException;
  * Revisión de los grupos que crean los alumnos (T-42, RF-23). El moderador solo ve y revisa los de su
  * universidad; el administrador, todos. Cada decisión queda en `moderation_actions` y se le avisa al creador.
  */
+#[ApiGroup('Administración', weight: 12)]
 class GroupReviewController extends Controller
 {
     /**

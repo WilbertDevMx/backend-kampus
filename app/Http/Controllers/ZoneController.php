@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Enums\ZoneType;
 use App\Http\Resources\ZoneResource;
 use App\Models\Zone;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
 
+#[Group('Zonas y ubicación', 'Catálogo de zonas, zona declarada y "Cerca de ti" con una celda aproximada (T-28).', weight: 5)]
 class ZoneController extends Controller
 {
     /**

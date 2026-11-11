@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Security\TwoFactor;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,6 +19,7 @@ use Illuminate\Validation\ValidationException;
  * 1. POST /two-factor: genera el secreto y devuelve la URI para el QR. Todavía no está activa.
  * 2. POST /two-factor/confirm: con el primer código de la app, queda activa y se entregan los códigos de respaldo.
  */
+#[Group('Verificación en dos pasos', 'Activar, confirmar y desactivar el código de la app de autenticación, y los códigos de respaldo (T-47).', weight: 3)]
 class TwoFactorController extends Controller
 {
     public function show(Request $request, TwoFactor $twoFactor): JsonResponse

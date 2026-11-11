@@ -8,10 +8,12 @@ use App\Http\Requests\Messages\StoreMessageRequest;
 use App\Http\Resources\MessageResource;
 use App\Models\User;
 use App\Models\UserMatch;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+#[Group('Mensajes', 'Chat entre matches (T-14).', weight: 9)]
 class MessageController extends Controller
 {
     private const DEFAULT_PER_PAGE = 50;

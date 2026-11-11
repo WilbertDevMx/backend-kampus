@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\GroupMemberResource;
 use App\Http\Resources\GroupResource;
 use App\Models\Group;
+use Dedoc\Scramble\Attributes\Group as ApiGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -18,6 +19,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * Unirse a un grupo, salir de él y ver a sus integrantes (T-17, RF-11).
  */
+#[ApiGroup('Grupos', weight: 11)]
 class GroupMembershipController extends Controller
 {
     /**

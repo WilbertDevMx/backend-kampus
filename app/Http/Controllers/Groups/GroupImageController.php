@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\GroupResource;
 use App\Models\Group;
 use App\Support\Images\ImageSanitizer;
+use Dedoc\Scramble\Attributes\Group as ApiGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +18,7 @@ use InvalidArgumentException;
 /**
  * Imagen de un grupo (T-17, RF-12): misma limpieza y bucket privado que las fotos de perfil.
  */
+#[ApiGroup('Grupos', weight: 11)]
 class GroupImageController extends Controller
 {
     public function store(Request $request, Group $group, ImageSanitizer $sanitizer): GroupResource|JsonResponse

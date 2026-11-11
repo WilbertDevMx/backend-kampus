@@ -6,15 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Support\Security\AccessTokenIssuer;
 use App\Support\Security\TwoFactorChallenge;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Laravel\Sanctum\PersonalAccessToken;
 
+#[Group('Autenticación', 'Registro, verificación de correo, inicio y cierre de sesión y recuperar la contraseña (T-04, T-05, T-45).', weight: 1)]
 class AuthTokenController extends Controller
 {
     /**
-     * Inicia sesión y emite un token de Sanctum con fecha de expiración (RF-02).
+     * Iniciar sesión.
+     *
+     * Emite un token de Sanctum con fecha de expiración (RF-02). Si la cuenta tiene la verificación en dos pasos
+     * activa, responde `200` con `two_factor_required` y un `challenge_token` en lugar del token.
+     *
+     * @unauthenticated
      */
     public function store(LoginRequest $request, AccessTokenIssuer $issuer, TwoFactorChallenge $challenges): JsonResponse
     {

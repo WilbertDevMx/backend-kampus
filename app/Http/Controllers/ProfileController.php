@@ -6,9 +6,11 @@ use App\Discovery\DiscoveryFilters;
 use App\Enums\Gender;
 use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
+#[Group('Perfil', 'Datos del perfil, intereses y fotos (T-07, T-49).', weight: 4)]
 class ProfileController extends Controller
 {
     public function show(Request $request): ProfileResource

@@ -5,11 +5,20 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 
+#[Group('Autenticación', weight: 1)]
 class RegisterController extends Controller
 {
+    /**
+     * Registrarse con el correo institucional.
+     *
+     * La universidad se asigna según el dominio del correo y se envía el correo de verificación (RF-01).
+     *
+     * @unauthenticated
+     */
     public function store(RegisterRequest $request): JsonResponse
     {
         // Solo pasan los campos validados: `role` nunca viene del request, así que el registro público

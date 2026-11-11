@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\UserMatch;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Un match visto desde quien hace la petición: `user` es siempre la otra persona.
+ *
+ * @mixin UserMatch
  */
 class MatchResource extends JsonResource
 {

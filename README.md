@@ -107,7 +107,17 @@ php artisan test                 # Ejecuta las pruebas
 php artisan migrate:fresh --seed # Reinicia la base de datos con catálogos y datos de demostración
 php artisan db:seed --class=DemoSeeder # Solo vuelve a crear los datos de demostración
 php artisan kampus:create-admin  # Crea el primer administrador (correo institucional)
+composer openapi                 # Regenera el contrato OpenAPI (docs/openapi.json)
 ```
+
+## Contrato de la API (OpenAPI)
+
+El contrato de la API está en [`docs/openapi.json`](docs/openapi.json) (OpenAPI 3.1, T-33). No se escribe a mano: lo genera [Scramble](https://scramble.dedoc.co) leyendo las rutas, los FormRequest y los API Resources.
+
+- **Ver la documentación interactiva:** con `php artisan serve`, abre `http://localhost:8000/docs/api`. El JSON está en `/docs/api.json`. En producción solo se publica con `API_DOCS_ENABLED=true`.
+- **Si tu PR cambia una ruta, una validación o una respuesta**, corre `composer openapi` y sube el `docs/openapi.json` en el mismo PR. La prueba `OpenApiContractTest` falla en la CI si el archivo no coincide con el código.
+- `composer openapi` exporta contra una base SQLite propia (`storage/framework/testing/openapi.sqlite`), igual que las pruebas, así que no toca tu base de datos y da el mismo resultado en cualquier máquina.
+- Las rutas que no piden token llevan `@unauthenticated` en el PHPDoc del método, y cada controlador declara su sección con `#[Group]`.
 
 ## Datos de demostración
 
