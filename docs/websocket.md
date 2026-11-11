@@ -84,6 +84,12 @@ Echo.private(`chat.${matchId}`).listen('.message.sent', ({ message }) => {
 
 Los eventos de match y de mensaje se entregan en los canales privados autorizados por el backend.
 
+La videollamada (T-19) avisa por el canal propio `user.{userId}` de la otra persona:
+
+- `call.started`: llamada entrante, con `call.match_id` y `call.caller` (id, nombre, universidad y foto). No trae
+  el token: para contestar, la app pide el suyo con `POST /api/matches/{matchId}/call/token`.
+- `call.ended`: la otra persona colgó o rechazó, con `call.match_id` y `call.ended_by`.
+
 ## Prueba manual
 
 1. Configura las variables de Reverb en `.env` y asegúrate de tener usuarios verificados y un match

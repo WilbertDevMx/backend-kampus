@@ -26,6 +26,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\UserLocationController;
+use App\Http\Controllers\VideoCallController;
 use App\Http\Controllers\ZoneController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -128,6 +129,16 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
                     ->middleware('throttle:30,1')
                     ->name('store');
                 Route::patch('/messages/read', [MessageController::class, 'markRead'])->name('read');
+            });
+
+        // Videollamada 1 a 1 con LiveKit (T-19, RF-10).
+        Route::prefix('matches/{match}/call')
+            ->whereNumber('match')
+            ->name('matches.call.')
+            ->group(function () {
+                Route::post('/', [VideoCallController::class, 'start'])->middleware('throttle:10,1')->name('start');
+                Route::post('/token', [VideoCallController::class, 'token'])->middleware('throttle:20,1')->name('token');
+                Route::delete('/', [VideoCallController::class, 'end'])->middleware('throttle:20,1')->name('end');
             });
 
         // Bloqueo y reporte de usuarios (T-21, RF-13 y RF-14).

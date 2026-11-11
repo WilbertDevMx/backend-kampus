@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Discovery\Ranking\DiscoveryRanking;
 use App\Discovery\Ranking\SharedInterestsRanking;
+use App\Video\LiveKit\LiveKitProvider;
+use App\Video\VideoCallProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -25,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Criterio de orden del descubrimiento (Strategy): se cambia aquí sin tocar la consulta.
         $this->app->bind(DiscoveryRanking::class, SharedInterestsRanking::class);
+
+        // Proveedor de videollamadas (Adapter, T-19): para cambiar de proveedor basta cambiar esta línea.
+        $this->app->bind(VideoCallProvider::class, fn (): VideoCallProvider => LiveKitProvider::fromConfig());
     }
 
     /**

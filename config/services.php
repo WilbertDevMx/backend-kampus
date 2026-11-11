@@ -28,6 +28,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Videollamadas (T-19): LiveKit Cloud. LIVEKIT_URL es la dirección wss:// del proyecto en LiveKit Cloud.
+    'livekit' => [
+        'url' => env('LIVEKIT_URL'),
+        'api_key' => env('LIVEKIT_API_KEY'),
+        'api_secret' => env('LIVEKIT_API_SECRET'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
