@@ -34,6 +34,9 @@ class ResetPasswordRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255'],
             // Política del proyecto (AppServiceProvider): mínimo 8, letras, mayúsculas, minúsculas y números.
             'password' => ['required', 'confirmed', Password::defaults()],
+            // T-47: si la cuenta tiene la verificación en dos pasos activa, también se pide uno de estos.
+            'code' => ['nullable', 'string', 'max:10'],
+            'recovery_code' => ['nullable', 'string', 'max:20'],
         ];
     }
 }
