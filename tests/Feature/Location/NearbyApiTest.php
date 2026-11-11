@@ -132,6 +132,26 @@ class NearbyApiTest extends TestCase
             ->assertJsonPath('data.0.id', $visible->id);
     }
 
+    public function test_it_requires_a_complete_profile_like_discover(): void
+    {
+        $incompleteViewer = $this->nearbyStudent(self::LAT, self::LNG, profile: ['completed_at' => null]);
+        Sanctum::actingAs($incompleteViewer);
+
+        $this->getJson('/api/discover/nearby')
+            ->assertForbidden()
+            ->assertJson(['code' => 'profile_incomplete']);
+
+        // Quien tiene el perfil incompleto tampoco sale en la vista de los demás.
+        $viewer = $this->nearbyStudent(self::LAT, self::LNG);
+        $complete = $this->nearbyStudent(self::LAT + 0.003, self::LNG);
+        Sanctum::actingAs($viewer);
+
+        $this->getJson('/api/discover/nearby')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $complete->id);
+    }
+
     public function test_it_applies_the_saved_discovery_filters_and_the_limit(): void
     {
         $viewer = $this->nearbyStudent(self::LAT, self::LNG, profile: ['discovery_filters' => ['universities' => [$this->uadec->id]]]);

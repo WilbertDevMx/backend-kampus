@@ -113,7 +113,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::put('/discover/filters', [DiscoveryFilterController::class, 'update'])->name('discover.filters.update');
         // Vista "Cerca" (T-35, RF-19): quién está cerca, en el centro de su zona y a qué distancia aproximada.
         Route::get('/discover/nearby', [NearbyController::class, 'index'])
-            ->middleware('throttle:30,1')
+            ->middleware(['profile.complete', 'throttle:30,1'])
             ->name('discover.nearby');
         Route::post('/swipes', [SwipeController::class, 'store'])->middleware('profile.complete')->name('swipes.store');
 
