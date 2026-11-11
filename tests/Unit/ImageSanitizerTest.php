@@ -41,7 +41,7 @@ class ImageSanitizerTest extends TestCase
 
     public function test_emails_are_masked_for_logs(): void
     {
-        $this->assertSame('al****@utt.edu.mx', MasksEmail::mask('  Alumno@UTT.edu.mx '));
+        $this->assertSame('al****@uttcampus.edu.mx', MasksEmail::mask('  Alumno@UTTcampus.edu.mx '));
         $this->assertSame('****', MasksEmail::mask('sin-arroba'));
     }
 

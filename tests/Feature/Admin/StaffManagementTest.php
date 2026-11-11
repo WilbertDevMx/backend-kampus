@@ -28,18 +28,18 @@ class StaffManagementTest extends TestCase
     {
         parent::setUp();
 
-        $this->utt = University::factory()->create(['short_name' => 'UTT', 'email_domains' => ['utt.edu.mx']]);
+        $this->utt = University::factory()->create(['short_name' => 'UTT', 'email_domains' => ['uttcampus.edu.mx']]);
         $this->uadec = University::factory()->create(['short_name' => 'UAdeC', 'email_domains' => ['uadec.edu.mx']]);
-        $this->admin = User::factory()->admin()->create(['email' => 'admin@utt.edu.mx']);
+        $this->admin = User::factory()->admin()->create(['email' => 'admin@uttcampus.edu.mx']);
     }
 
     public function test_an_admin_creates_a_moderator_for_one_university(): void
     {
         Sanctum::actingAs($this->admin);
 
-        $response = $this->postJson('/api/admin/staff', $this->moderatorPayload(['email' => '  Moderador@UTT.edu.mx ']))
+        $response = $this->postJson('/api/admin/staff', $this->moderatorPayload(['email' => '  Moderador@UTTcampus.edu.mx ']))
             ->assertCreated()
-            ->assertJsonPath('data.email', 'moderador@utt.edu.mx')
+            ->assertJsonPath('data.email', 'moderador@uttcampus.edu.mx')
             ->assertJsonPath('data.role', 'moderator')
             ->assertJsonPath('data.university.short_name', 'UTT')
             ->assertJsonPath('data.active', true)
@@ -122,7 +122,7 @@ class StaffManagementTest extends TestCase
             'password' => 'password',
             'password_confirmation' => 'password',
         ]))->assertInvalid(['password']);
-        $this->postJson('/api/admin/staff', $this->moderatorPayload(['email' => 'ADMIN@utt.edu.mx']))
+        $this->postJson('/api/admin/staff', $this->moderatorPayload(['email' => 'ADMIN@uttcampus.edu.mx']))
             ->assertInvalid(['email']);
         $this->postJson('/api/admin/staff', $this->moderatorPayload(['reason' => '']))
             ->assertInvalid(['reason']);
@@ -172,7 +172,7 @@ class StaffManagementTest extends TestCase
 
     public function test_deactivating_a_staff_account_closes_its_sessions_and_blocks_login(): void
     {
-        $moderator = User::factory()->moderator($this->utt)->create(['email' => 'moderador@utt.edu.mx']);
+        $moderator = User::factory()->moderator($this->utt)->create(['email' => 'moderador@uttcampus.edu.mx']);
         $moderator->createToken('panel');
         Sanctum::actingAs($this->admin);
 
@@ -195,7 +195,7 @@ class StaffManagementTest extends TestCase
             'reason' => 'Terminó su servicio social.',
         ]);
 
-        $this->postJson('/api/login', ['email' => 'moderador@utt.edu.mx', 'password' => 'password'])
+        $this->postJson('/api/login', ['email' => 'moderador@uttcampus.edu.mx', 'password' => 'password'])
             ->assertForbidden()
             ->assertJsonPath('message', 'Tu cuenta está suspendida.');
     }
@@ -262,7 +262,7 @@ class StaffManagementTest extends TestCase
     {
         return [
             'name' => 'Moderador UTT',
-            'email' => 'moderador@utt.edu.mx',
+            'email' => 'moderador@uttcampus.edu.mx',
             'role' => 'moderator',
             'university_id' => $this->utt->id,
             'password' => self::PASSWORD,
