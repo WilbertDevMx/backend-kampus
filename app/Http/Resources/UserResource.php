@@ -20,6 +20,9 @@ class UserResource extends JsonResource
             // La app usa el rol para elegir la vista: estudiante o panel de administración (T-40).
             'role' => $this->role->value,
             'university_id' => $this->university_id,
+            // Si es `false`, la app manda al estudiante a terminar su perfil antes de usarla (T-49).
+            // El staff no tiene perfil social, así que para él siempre es `true`.
+            'profile_completed' => $this->role->isStaff() || $this->profile?->completed_at !== null,
         ];
     }
 }

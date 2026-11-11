@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([CatalogSeeder::class, ZoneSeeder::class]);
+        // DemoSeeder (T-34) agrega estudiantes ficticios para demostrar el descubrimiento y la vista Cerca.
+        $this->call([CatalogSeeder::class, ZoneSeeder::class, DemoSeeder::class]);
 
         // User::factory(10)->create();
 

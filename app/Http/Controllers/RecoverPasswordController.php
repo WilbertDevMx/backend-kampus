@@ -6,6 +6,7 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\User;
 use App\Support\Security\MasksEmail;
+use App\Support\Security\TwoFactor;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +22,48 @@ use Illuminate\Validation\ValidationException;
  */
 class RecoverPasswordController extends Controller
 {
+    /**
+     * T-47: con la verificación en dos pasos activa, el enlace del correo no basta para cambiar la contraseña;
+     * también hace falta un código de la app o un código de respaldo. Así, quien entre al correo del alumno no
+     * se queda con la cuenta.
+     *
+     * Solo se revisa cuando el enlace es válido: sin un enlace válido, la respuesta es la misma de siempre y no
+     * revela qué cuentas tienen la verificación en dos pasos.
+     */
+    private function ensureSecondFactor(ResetPasswordRequest $request, TwoFactor $twoFactor): void
+    {
+        $broker = PasswordBroker::broker();
+        $user = $broker->getUser(['email' => $request->string('email')->toString()]);
+
+        if (! $user instanceof User
+            || ! $user->hasTwoFactorEnabled()
+            || ! $broker->tokenExists($user, $request->string('token')->toString())) {
+            return;
+        }
+
+        $code = $request->string('code')->toString();
+        $recoveryCode = $request->string('recovery_code')->toString();
+
+        if ($code === '' && $recoveryCode === '') {
+            throw ValidationException::withMessages([
+                'code' => 'Tu cuenta tiene la verificación en dos pasos activa: escribe el código de tu app o un código de respaldo.',
+            ]);
+        }
+
+        $valid = $recoveryCode !== ''
+            ? $twoFactor->useRecoveryCode($user, $recoveryCode)
+            : $twoFactor->verify($user, $user->two_factor_secret, $code);
+
+        if (! $valid) {
+            Log::channel('security')->notice('Código de verificación en dos pasos incorrecto al restablecer la contraseña.', [
+                'user_id' => $user->getKey(),
+                'ip' => $request->ip(),
+            ]);
+
+            throw ValidationException::withMessages([$recoveryCode !== '' ? 'recovery_code' : 'code' => 'El código no es correcto.']);
+        }
+    }
+
     public function sendResetLink(ForgotPasswordRequest $request): JsonResponse
     {
         $email = $request->string('email')->toString();
@@ -39,8 +82,10 @@ class RecoverPasswordController extends Controller
         ]);
     }
 
-    public function reset(ResetPasswordRequest $request): JsonResponse
+    public function reset(ResetPasswordRequest $request, TwoFactor $twoFactor): JsonResponse
     {
+        $this->ensureSecondFactor($request, $twoFactor);
+
         $status = PasswordBroker::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password): void {
