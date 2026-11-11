@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Http\Resources\MessageResource;
 use App\Models\Message;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -27,19 +28,16 @@ class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
         return 'message.sent';
     }
 
-    /** @return array{message: array<string, mixed>} */
+    /**
+     * Lo mismo que responde la API, para que la app trate igual un mensaje recibido por WebSocket y uno del
+     * historial. En las imágenes incluye `image_url` (T-15).
+     *
+     * @return array{message: array<string, mixed>}
+     */
     public function broadcastWith(): array
     {
         return [
-            'message' => [
-                'id' => $this->message->id,
-                'match_id' => $this->message->match_id,
-                'sender_id' => $this->message->sender_id,
-                'type' => $this->message->type,
-                'body' => $this->message->body,
-                'read_at' => $this->message->read_at?->toIso8601String(),
-                'created_at' => $this->message->created_at?->toIso8601String(),
-            ],
+            'message' => (new MessageResource($this->message))->resolve(),
         ];
     }
 }

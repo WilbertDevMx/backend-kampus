@@ -72,8 +72,11 @@ Define `VITE_REVERB_APP_KEY`, `VITE_REVERB_HOST`, `VITE_REVERB_PORT`, `VITE_REVE
 expongas el secreto de Reverb en variables `VITE_`.
 
 Los nombres para suscribirse son, por ejemplo, `Echo.private('chat.42')` y `Echo.private('user.7')`.
-Al enviar un mensaje de texto por la API T-14, el backend publica `message.sent` en `chat.{matchId}`.
-El payload contiene `message` con `id`, `match_id`, `sender_id`, `type`, `body`, `read_at` y `created_at`.
+Al enviar un mensaje por la API (texto con T-14, imagen con T-15), el backend publica `message.sent` en
+`chat.{matchId}`. El payload contiene `message` con lo mismo que responde la API: `id`, `match_id`,
+`sender_id`, `type` (`text` o `image`), `body`, `image_url`, `read_at` y `created_at`. En las imágenes,
+`image_url` es una URL firmada que vence a los 15 minutos; para verla después, la app vuelve a pedir el
+historial. En los mensajes de texto es `null`.
 Con `broadcastAs`, Echo escucha el evento con punto inicial:
 
 ```js
