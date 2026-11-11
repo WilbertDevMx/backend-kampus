@@ -57,6 +57,7 @@ class VideoCallApiTest extends TestCase
         $claims = $this->claimsOf($response->json('data.token'));
         $this->assertSame("user-{$this->ana->id}", $claims['sub']);
         $this->assertSame("match-{$this->match->id}", $claims['video']['room']);
+        $this->assertSame(2, $claims['roomConfig']['maxParticipants']);
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/CreateRoom')
             && $request['name'] === "match-{$this->match->id}"

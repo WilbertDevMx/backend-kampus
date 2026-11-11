@@ -18,7 +18,7 @@ class LiveKitProviderTest extends TestCase
     public function test_the_join_token_is_a_signed_jwt_limited_to_one_room(): void
     {
         $this->freezeTime();
-        $access = $this->provider()->accessFor('match-7', 'user-3', 'Ana López');
+        $access = $this->provider()->accessFor('match-7', 'user-3', 'Ana López', 2);
 
         $this->assertSame('wss://kampus-prueba.livekit.cloud', $access->url);
         $this->assertSame('match-7', $access->room);
@@ -46,6 +46,9 @@ class LiveKitProviderTest extends TestCase
             'canPublishData' => true,
         ], $payload['video']);
         $this->assertArrayNotHasKey('roomCreate', $payload['video'], 'El token de la app no puede crear ni cerrar salas.');
+
+        // LiveKit Cloud solo hace cumplir el límite de participantes que viene en el token.
+        $this->assertSame(['maxParticipants' => 2, 'emptyTimeout' => 300], $payload['roomConfig']);
     }
 
     public function test_it_creates_rooms_with_a_participant_limit_through_the_room_service(): void
@@ -86,7 +89,7 @@ class LiveKitProviderTest extends TestCase
         }
 
         $this->expectException(VideoCallUnavailable::class);
-        (new LiveKitProvider(null, null, null))->accessFor('match-7', 'user-3', 'Ana');
+        (new LiveKitProvider(null, null, null))->accessFor('match-7', 'user-3', 'Ana', 2);
     }
 
     private function provider(): LiveKitProvider

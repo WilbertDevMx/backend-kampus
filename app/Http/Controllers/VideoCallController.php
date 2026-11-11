@@ -84,11 +84,11 @@ class VideoCallController extends Controller
     {
         $room = self::roomFor($match);
 
-        // Se crea (o se confirma) en cada entrada: si LiveKit la creara sola al llegar alguien, no tendría el
-        // límite de 2 participantes.
+        // El límite de 2 va en la sala y en el token, como segunda barrera. La primera es esta API: solo los dos
+        // del match reciben token, cada uno con su identidad fija (`user-{id}`).
         $this->provider->openRoom($room, self::MAX_PARTICIPANTS);
 
-        return $this->provider->accessFor($room, 'user-'.$user->getKey(), (string) $user->name);
+        return $this->provider->accessFor($room, 'user-'.$user->getKey(), (string) $user->name, self::MAX_PARTICIPANTS);
     }
 
     private function accessResponse(VideoCallAccess $access, int $status = 200): JsonResponse

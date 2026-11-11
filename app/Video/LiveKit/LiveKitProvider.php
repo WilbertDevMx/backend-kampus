@@ -53,7 +53,7 @@ final class LiveKitProvider implements VideoCallProvider
         ]);
     }
 
-    public function accessFor(string $room, string $identity, string $name): VideoCallAccess
+    public function accessFor(string $room, string $identity, string $name, int $maxParticipants): VideoCallAccess
     {
         $this->ensureConfigured();
         $expiresAt = CarbonImmutable::now()->addSeconds(self::TOKEN_TTL_SECONDS);
@@ -68,6 +68,14 @@ final class LiveKitProvider implements VideoCallProvider
                 'canPublish' => true,
                 'canSubscribe' => true,
                 'canPublishData' => true,
+            ],
+            // El límite también va en el token, como en CreateRoom. Ojo: en las pruebas del 11 nov contra LiveKit
+            // Cloud, con clientes WebRTC reales, ninguno de los dos detuvo a un tercero en una sala de 2 (solo
+            // el límite de 1). Lo que garantiza las 2 personas es que solo esta API firma tokens, solo para los
+            // dos del match y con identidad fija: si alguien entra otra vez, LiveKit saca su sesión anterior.
+            'roomConfig' => [
+                'maxParticipants' => $maxParticipants,
+                'emptyTimeout' => self::EMPTY_TIMEOUT_SECONDS,
             ],
         ]);
 

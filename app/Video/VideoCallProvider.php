@@ -18,11 +18,12 @@ interface VideoCallProvider
     public function openRoom(string $room, int $maxParticipants): void;
 
     /**
-     * Credenciales para que una persona entre a la sala desde la app.
+     * Credenciales para que una persona entre a la sala desde la app. El límite de participantes viaja también
+     * en las credenciales, por si el proveedor solo lo hace cumplir desde ahí.
      *
      * @throws VideoCallUnavailable si el proveedor no está configurado.
      */
-    public function accessFor(string $room, string $identity, string $name): VideoCallAccess;
+    public function accessFor(string $room, string $identity, string $name, int $maxParticipants): VideoCallAccess;
 
     /**
      * Cierra la sala y saca a quien siga conectado. Si la sala ya no existe, no hace nada.
