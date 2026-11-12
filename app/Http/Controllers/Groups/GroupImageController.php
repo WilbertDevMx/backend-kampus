@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\GroupResource;
 use App\Models\Group;
 use App\Support\Images\ImageSanitizer;
+use App\Support\Images\ImageUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -24,15 +25,15 @@ class GroupImageController extends Controller
         Gate::authorize('manage', $group);
 
         $validated = $request->validate([
-            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-        ]);
+            'image' => ['required', ...ImageUpload::rules()],
+        ], ImageUpload::messages('image'));
 
         // RNF-11: se re-codifica para quitar el EXIF (con el GPS) y nunca se guarda el archivo original.
         try {
             $cleanImage = $sanitizer->sanitize($validated['image']);
-        } catch (InvalidArgumentException) {
+        } catch (InvalidArgumentException $error) {
             throw ValidationException::withMessages([
-                'image' => 'El archivo no es una imagen válida.',
+                'image' => $error->getMessage(),
             ]);
         }
 
