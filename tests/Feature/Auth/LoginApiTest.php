@@ -14,10 +14,10 @@ class LoginApiTest extends TestCase
 
     public function test_verified_user_receives_an_expiring_token(): void
     {
-        $user = User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        $user = User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
         $response = $this->postJson('/api/login', [
-            'email' => 'alumno@utt.edu.mx',
+            'email' => 'alumno@uttcampus.edu.mx',
             'password' => 'password',
             'device_name' => 'iphone',
         ]);
@@ -25,7 +25,7 @@ class LoginApiTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('token_type', 'Bearer')
             ->assertJsonPath('user.id', $user->id)
-            ->assertJsonPath('user.email', 'alumno@utt.edu.mx')
+            ->assertJsonPath('user.email', 'alumno@uttcampus.edu.mx')
             ->assertJsonPath('user.role', 'student')
             ->assertJsonStructure(['token', 'token_type', 'expires_at', 'user' => ['id', 'name', 'email', 'email_verified_at', 'role', 'university_id']])
             ->assertJsonMissingPath('user.password');
@@ -39,29 +39,29 @@ class LoginApiTest extends TestCase
 
     public function test_issued_token_authenticates_api_requests(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
-        $token = $this->login('alumno@utt.edu.mx')->json('token');
+        $token = $this->login('alumno@uttcampus.edu.mx')->json('token');
 
         $this->withToken($token)
             ->getJson('/api/user')
             ->assertOk()
-            ->assertJsonPath('data.email', 'alumno@utt.edu.mx')
+            ->assertJsonPath('data.email', 'alumno@uttcampus.edu.mx')
             ->assertJsonPath('data.role', 'student');
     }
 
     public function test_email_is_matched_case_insensitively(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
-        $this->login('  Alumno@UTT.edu.mx ')->assertCreated();
+        $this->login('  Alumno@UTTcampus.edu.mx ')->assertCreated();
     }
 
     public function test_wrong_password_is_rejected_without_issuing_a_token(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
-        $this->login('alumno@utt.edu.mx', 'incorrecta')
+        $this->login('alumno@uttcampus.edu.mx', 'incorrecta')
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['email' => 'Las credenciales no son correctas.']);
 
@@ -70,7 +70,7 @@ class LoginApiTest extends TestCase
 
     public function test_unknown_email_gets_the_same_error_as_a_wrong_password(): void
     {
-        $this->login('nadie@utt.edu.mx')
+        $this->login('nadie@uttcampus.edu.mx')
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['email' => 'Las credenciales no son correctas.']);
     }
@@ -84,9 +84,9 @@ class LoginApiTest extends TestCase
 
     public function test_unverified_user_cannot_log_in(): void
     {
-        User::factory()->unverified()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->unverified()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
-        $this->login('alumno@utt.edu.mx')
+        $this->login('alumno@uttcampus.edu.mx')
             ->assertForbidden()
             ->assertJsonPath('message', 'Verifica tu correo institucional antes de iniciar sesión.');
 
@@ -95,9 +95,9 @@ class LoginApiTest extends TestCase
 
     public function test_suspended_user_cannot_log_in(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx', 'suspended_at' => now()]);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx', 'suspended_at' => now()]);
 
-        $this->login('alumno@utt.edu.mx')
+        $this->login('alumno@uttcampus.edu.mx')
             ->assertForbidden()
             ->assertJsonPath('message', 'Tu cuenta está suspendida.');
 
@@ -106,23 +106,23 @@ class LoginApiTest extends TestCase
 
     public function test_a_wrong_password_on_a_suspended_account_does_not_reveal_the_suspension(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx', 'suspended_at' => now()]);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx', 'suspended_at' => now()]);
 
-        $this->login('alumno@utt.edu.mx', 'incorrecta')
+        $this->login('alumno@uttcampus.edu.mx', 'incorrecta')
             ->assertUnprocessable()
             ->assertInvalid(['email' => 'Las credenciales no son correctas.']);
     }
 
     public function test_account_is_locked_after_five_failed_attempts(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
         for ($i = 0; $i < LoginRequest::MAX_ATTEMPTS; $i++) {
-            $this->login('alumno@utt.edu.mx', 'incorrecta')->assertUnprocessable();
+            $this->login('alumno@uttcampus.edu.mx', 'incorrecta')->assertUnprocessable();
         }
 
         // Ni siquiera la contraseña correcta entra mientras dura el bloqueo.
-        $this->login('alumno@utt.edu.mx')
+        $this->login('alumno@uttcampus.edu.mx')
             ->assertTooManyRequests()
             ->assertJsonValidationErrors(['email' => 'Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.']);
 
@@ -131,37 +131,37 @@ class LoginApiTest extends TestCase
 
     public function test_lockout_expires_after_the_lockout_period(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
         for ($i = 0; $i < LoginRequest::MAX_ATTEMPTS; $i++) {
-            $this->login('alumno@utt.edu.mx', 'incorrecta');
+            $this->login('alumno@uttcampus.edu.mx', 'incorrecta');
         }
 
         $this->travel(LoginRequest::LOCKOUT_SECONDS + 1)->seconds();
 
-        $this->login('alumno@utt.edu.mx')->assertCreated();
+        $this->login('alumno@uttcampus.edu.mx')->assertCreated();
     }
 
     public function test_successful_login_resets_the_failed_attempt_counter(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
         for ($i = 0; $i < LoginRequest::MAX_ATTEMPTS - 1; $i++) {
-            $this->login('alumno@utt.edu.mx', 'incorrecta');
+            $this->login('alumno@uttcampus.edu.mx', 'incorrecta');
         }
 
-        $this->login('alumno@utt.edu.mx')->assertCreated();
+        $this->login('alumno@uttcampus.edu.mx')->assertCreated();
 
         for ($i = 0; $i < LoginRequest::MAX_ATTEMPTS - 1; $i++) {
-            $this->login('alumno@utt.edu.mx', 'incorrecta')->assertUnprocessable();
+            $this->login('alumno@uttcampus.edu.mx', 'incorrecta')->assertUnprocessable();
         }
     }
 
     public function test_expired_token_is_rejected(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
-        $token = $this->login('alumno@utt.edu.mx')->json('token');
+        $token = $this->login('alumno@uttcampus.edu.mx')->json('token');
 
         $this->travel(config('sanctum.expiration') + 1)->minutes();
 
@@ -170,10 +170,10 @@ class LoginApiTest extends TestCase
 
     public function test_logout_revokes_only_the_current_token(): void
     {
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
-        $phoneToken = $this->login('alumno@utt.edu.mx')->json('token');
-        $laptopToken = $this->login('alumno@utt.edu.mx')->json('token');
+        $phoneToken = $this->login('alumno@uttcampus.edu.mx')->json('token');
+        $laptopToken = $this->login('alumno@uttcampus.edu.mx')->json('token');
 
         $this->withToken($phoneToken)->postJson('/api/logout')->assertNoContent();
         $this->forgetResolvedUser();

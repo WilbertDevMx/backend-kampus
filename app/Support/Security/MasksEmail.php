@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 final class MasksEmail
 {
     /**
-     * Ejemplo: "alumno@utt.edu.mx" → "al****@utt.edu.mx".
+     * Ejemplo: "alumno@uttcampus.edu.mx" → "al****@uttcampus.edu.mx".
      */
     public static function mask(string $email): string
     {

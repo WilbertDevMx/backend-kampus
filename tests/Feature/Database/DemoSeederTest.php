@@ -97,7 +97,7 @@ class DemoSeederTest extends TestCase
 
     public function test_it_can_run_twice_without_duplicating_or_touching_other_users(): void
     {
-        $other = User::factory()->create(['email' => 'alguien@utt.edu.mx']);
+        $other = User::factory()->create(['email' => 'alguien@uttcampus.edu.mx']);
 
         $this->seed(DemoSeeder::class);
         $first = $this->demoStudents()->count();

@@ -26,18 +26,18 @@ class RegisterApiTest extends TestCase
 
         $response = $this->postJson('/api/register', [
             'name' => 'Ada Student',
-            'email' => 'ada@utt.edu.mx',
+            'email' => 'ada@uttcampus.edu.mx',
             'password' => self::PASSWORD,
             'password_confirmation' => self::PASSWORD,
         ]);
 
-        $user = User::where('email', 'ada@utt.edu.mx')->firstOrFail();
+        $user = User::where('email', 'ada@uttcampus.edu.mx')->firstOrFail();
 
         $response->assertCreated()
-            ->assertJsonPath('user.email', 'ada@utt.edu.mx')
+            ->assertJsonPath('user.email', 'ada@uttcampus.edu.mx')
             ->assertJsonMissingPath('user.password');
         $this->assertDatabaseHas('users', [
-            'email' => 'ada@utt.edu.mx',
+            'email' => 'ada@uttcampus.edu.mx',
             'university_id' => $user->university_id,
             'email_verified_at' => null,
             'role' => 'student',
@@ -53,7 +53,7 @@ class RegisterApiTest extends TestCase
 
         $this->postJson('/api/register', [
             'name' => 'Ada Student',
-            'email' => 'ada@utt.edu.mx',
+            'email' => 'ada@uttcampus.edu.mx',
             'password' => self::PASSWORD,
             'password_confirmation' => self::PASSWORD,
         ])->assertCreated();
@@ -90,23 +90,23 @@ class RegisterApiTest extends TestCase
 
         $this->postJson('/api/register', [
             'name' => 'Ada Student',
-            'email' => '  Ada@UTT.edu.mx ',
+            'email' => '  Ada@UTTcampus.edu.mx ',
             'password' => self::PASSWORD,
             'password_confirmation' => self::PASSWORD,
-        ])->assertCreated()->assertJsonPath('user.email', 'ada@utt.edu.mx');
+        ])->assertCreated()->assertJsonPath('user.email', 'ada@uttcampus.edu.mx');
 
-        $this->assertDatabaseHas('users', ['email' => 'ada@utt.edu.mx']);
+        $this->assertDatabaseHas('users', ['email' => 'ada@uttcampus.edu.mx']);
     }
 
     public function test_registration_rejects_an_email_that_differs_only_in_case(): void
     {
         $this->seed(CatalogSeeder::class);
         Notification::fake();
-        User::factory()->create(['email' => 'ada@utt.edu.mx']);
+        User::factory()->create(['email' => 'ada@uttcampus.edu.mx']);
 
         $this->postJson('/api/register', [
             'name' => 'Ada Student',
-            'email' => 'ADA@utt.edu.mx',
+            'email' => 'ADA@uttcampus.edu.mx',
             'password' => self::PASSWORD,
             'password_confirmation' => self::PASSWORD,
         ])->assertInvalid(['email']);
@@ -121,13 +121,13 @@ class RegisterApiTest extends TestCase
 
         $this->postJson('/api/register', [
             'name' => 'Ada Student',
-            'email' => 'ada@utt.edu.mx',
+            'email' => 'ada@uttcampus.edu.mx',
             'password' => self::PASSWORD,
             'password_confirmation' => self::PASSWORD,
             'role' => 'admin',
         ])->assertCreated();
 
-        $this->assertDatabaseHas('users', ['email' => 'ada@utt.edu.mx', 'role' => 'student']);
+        $this->assertDatabaseHas('users', ['email' => 'ada@uttcampus.edu.mx', 'role' => 'student']);
     }
 
     public function test_registration_rejects_a_weak_password(): void
@@ -137,12 +137,12 @@ class RegisterApiTest extends TestCase
 
         $this->postJson('/api/register', [
             'name' => 'Ada Student',
-            'email' => 'ada@utt.edu.mx',
+            'email' => 'ada@uttcampus.edu.mx',
             'password' => 'password',
             'password_confirmation' => 'password',
         ])->assertInvalid(['password']);
 
-        $this->assertDatabaseMissing('users', ['email' => 'ada@utt.edu.mx']);
+        $this->assertDatabaseMissing('users', ['email' => 'ada@uttcampus.edu.mx']);
         Notification::assertNothingSent();
     }
 
@@ -200,7 +200,7 @@ class RegisterApiTest extends TestCase
         $verificationUrl = URL::temporarySignedRoute(
             'verification.verify',
             now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1('other@utt.edu.mx')],
+            ['id' => $user->id, 'hash' => sha1('other@uttcampus.edu.mx')],
             absolute: false,
         );
 
