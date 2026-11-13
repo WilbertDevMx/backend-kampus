@@ -7,11 +7,13 @@ use App\Http\Resources\MatchResource;
 use App\Models\Swipe;
 use App\Models\User;
 use App\Models\UserMatch;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
+#[Group('Descubrimiento', weight: 6)]
 class SwipeController extends Controller
 {
     /**

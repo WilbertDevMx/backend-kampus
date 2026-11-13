@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Grupo en el panel de revisión (T-42): incluye quién lo creó y quién lo revisó.
+ *
+ * @mixin Group
  */
 class AdminGroupResource extends JsonResource
 {

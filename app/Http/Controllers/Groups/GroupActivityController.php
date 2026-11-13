@@ -7,6 +7,7 @@ use App\Http\Requests\Groups\StoreGroupActivityRequest;
 use App\Http\Resources\GroupActivityResource;
 use App\Models\Group;
 use App\Models\GroupActivity;
+use Dedoc\Scramble\Attributes\Group as ApiGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -17,6 +18,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * Actividades de un grupo (T-17, RF-12): las ve quien puede ver el grupo y las publican sus administradores.
  */
+#[ApiGroup('Grupos', weight: 11)]
 class GroupActivityController extends Controller
 {
     /**

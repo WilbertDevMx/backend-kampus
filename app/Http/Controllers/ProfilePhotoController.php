@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\ProfileResource;
 use App\Support\Images\ImageSanitizer;
 use App\Support\Images\ImageUpload;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -12,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
+#[Group('Perfil', weight: 4)]
 class ProfilePhotoController extends Controller
 {
     public function store(Request $request, ImageSanitizer $sanitizer): ProfileResource|Response

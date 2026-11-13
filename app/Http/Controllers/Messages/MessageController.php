@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Models\UserMatch;
 use App\Support\Images\ImageSanitizer;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -19,6 +20,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
+#[Group('Mensajes', 'Chat entre matches con texto o imagen (T-14, T-15).', weight: 9)]
 class MessageController extends Controller
 {
     private const DEFAULT_PER_PAGE = 50;

@@ -9,6 +9,7 @@ use App\Models\UserMatch;
 use App\Video\VideoCallAccess;
 use App\Video\VideoCallProvider;
 use App\Video\VideoCallUnavailable;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Log;
  * - La sala es una por match y admite como máximo 2 participantes.
  * - Las credenciales de LiveKit nunca salen del servidor: la app solo recibe un token de 15 minutos para su sala.
  */
+#[Group('Videollamada', 'Iniciar, obtener el token y colgar la videollamada 1 a 1 entre matches (T-19).', weight: 9)]
 class VideoCallController extends Controller
 {
     private const MAX_PARTICIPANTS = 2;

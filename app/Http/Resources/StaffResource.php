@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Cuenta de staff en el panel de administración (T-41).
+ *
+ * @mixin User
  */
 class StaffResource extends JsonResource
 {

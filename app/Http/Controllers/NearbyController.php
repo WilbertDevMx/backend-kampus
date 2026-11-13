@@ -8,6 +8,7 @@ use App\Discovery\NearbyPlacement;
 use App\Http\Resources\NearbyUserResource;
 use App\Models\User;
 use App\Support\Location\Geohash;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,6 +19,7 @@ use Illuminate\Http\Request;
  * Sigue las mismas reglas del descubrimiento (`DiscoveryQuery`): solo estudiantes disponibles, sin
  * bloqueados en ningún sentido, sin perfiles ya evaluados y con los filtros que el alumno guardó.
  */
+#[Group('Vista Cerca', 'Estudiantes cercanos con posición difuminada y distancia aproximada (T-35).', weight: 7)]
 class NearbyController extends Controller
 {
     /** Radio de búsqueda. La celda de 5 caracteres y sus vecinas cubren unos 15 km × 15 km. */

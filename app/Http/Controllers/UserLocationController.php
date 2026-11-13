@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\ZoneResource;
 use App\Models\User;
 use App\Models\UserLocation;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\DB;
  * La API nunca recibe ni guarda una coordenada exacta: si la petición trae latitud o longitud, la rechaza.
  * Al desactivar "Cerca de ti", la celda se borra.
  */
+#[Group('Zonas y ubicación', weight: 5)]
 class UserLocationController extends Controller
 {
     /**

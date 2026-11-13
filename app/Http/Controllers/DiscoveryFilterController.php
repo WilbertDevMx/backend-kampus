@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Discovery\DiscoveryFilters;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
  * Filtros de descubrimiento guardados en el perfil, para que persistan entre sesiones (RF-06).
  */
+#[Group('Descubrimiento', weight: 6)]
 class DiscoveryFilterController extends Controller
 {
     public function show(Request $request): JsonResponse

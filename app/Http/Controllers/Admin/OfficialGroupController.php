@@ -10,12 +10,14 @@ use App\Http\Requests\Admin\StoreOfficialGroupRequest;
 use App\Http\Resources\AdminGroupResource;
 use App\Models\Group;
 use App\Models\ModerationAction;
+use Dedoc\Scramble\Attributes\Group as ApiGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Grupos oficiales (T-42, RF-23): los crea el staff, se publican sin revisión y llevan la insignia "Oficial".
  */
+#[ApiGroup('Administración', weight: 12)]
 class OfficialGroupController extends Controller
 {
     public function store(StoreOfficialGroupRequest $request): JsonResponse

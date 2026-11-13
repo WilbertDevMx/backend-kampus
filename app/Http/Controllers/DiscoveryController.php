@@ -6,9 +6,11 @@ use App\Discovery\DiscoveryFilters;
 use App\Discovery\DiscoveryQuery;
 use App\Discovery\Ranking\DiscoveryRanking;
 use App\Http\Resources\DiscoveryCardResource;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+#[Group('Descubrimiento', 'Perfiles por evaluar, filtros y "Me interesa" o "Pasar" (T-09).', weight: 6)]
 class DiscoveryController extends Controller
 {
     /**

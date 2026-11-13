@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\MatchResource;
 use App\Models\UserMatch;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+#[Group('Matches', 'Lista de matches (T-10).', weight: 8)]
 class MatchController extends Controller
 {
     /**
