@@ -1,0 +1,12 @@
+# Imagen de desarrollo local de la API (la usa compose.yaml). No copia el código: compose monta el repo
+# en /var/www/html, así que los cambios se ven sin reconstruir. La de producción es el Dockerfile de la raíz.
+FROM php:8.3-cli-alpine
+
+# Las mismas extensiones que producción: pdo_pgsql, gd (ImageSanitizer), pcntl (Reverb y queue:work), etc.
+COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pdo_pgsql gd pcntl opcache intl zip
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY local.ini /usr/local/etc/php/conf.d/zz-kampus.ini
+
+WORKDIR /var/www/html
