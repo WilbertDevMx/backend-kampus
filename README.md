@@ -54,6 +54,29 @@ La API queda disponible en `http://localhost:8000/api`.
 
 > **Nota sobre la base de datos:** el proyecto está configurado para PostgreSQL porque la vista "Cerca" trabaja con datos geográficos. Si el equipo decide usar MySQL, basta con cambiar `DB_CONNECTION=mysql` y `DB_PORT=3306` en `.env`, y el servicio de base de datos en `.github/workflows/ci.yml`.
 
+### Con Docker (opcional)
+
+Si no quieres instalar PHP ni PostgreSQL, `compose.yaml` levanta todo en contenedores, sin Nginx ni HTTPS. Solo necesitas Docker Desktop y el `.env` de arriba (con su `APP_KEY`):
+
+```bash
+docker compose up -d --build
+docker compose exec app php artisan migrate --seed
+```
+
+| Servicio | Dirección | Qué es |
+|---|---|---|
+| `app` | `http://localhost:8000/api` | La API (`php artisan serve`) |
+| `reverb` | `ws://localhost:8080` | WebSocket (T-13) |
+| `queue` | — | Cola de trabajos: correos y broadcasts |
+| `db` | `localhost:5433` · base, usuario y contraseña `kampus` | PostgreSQL 16 (en el 5433 para no chocar con uno instalado en el 5432) |
+| `mailpit` | `http://localhost:8025` | Bandeja donde se ven los correos que manda la API |
+
+- El código se monta desde tu carpeta: los cambios de la API se ven al guardar. `queue` y `reverb` cargan el código al arrancar; si cambias jobs, eventos o canales, corre `docker compose restart queue reverb`.
+- `vendor` vive en un volumen de Docker (leerlo desde Windows hacía cada petición ~10 veces más lenta). Lo llena el servicio `composer` en cada `docker compose up`. Para agregar un paquete: `docker compose exec app composer require vendor/paquete`.
+- Los comandos de Artisan se corren dentro del contenedor: `docker compose exec app php artisan migrate:fresh --seed`. Si los corres fuera, van contra tu base local, no contra la de Docker.
+- No corras `php artisan config:cache` fuera de Docker: el contenedor tomaría `DB_HOST=127.0.0.1` del caché y no conectaría.
+- La primera construcción tarda varios minutos porque compila las extensiones de PHP; después queda en caché.
+
 ## Flujo de trabajo con ramas
 
 | Rama | Uso |

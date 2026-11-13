@@ -1,0 +1,101 @@
+# Entorno de desarrollo local con Docker (sin Nginx ni HTTPS). El de pruebas en AWS es compose.prod.yaml.
+# Uso: docker compose up -d --build
+#
+# Lee el .env de siempre; las variables de `environment` de abajo le ganan a las del .env para que la API
+# encuentre la base, Reverb y el correo dentro de la red de Docker. Si corres `php artisan config:cache`
+# fuera de Docker, bórralo (`php artisan config:clear`) o el contenedor usará 127.0.0.1 y no conectará.
+
+x-api: &api
+  build:
+    context: ./docker/php
+    dockerfile: Dockerfile.dev
+  image: kampus-api-dev
+  volumes:
+    - .:/var/www/html
+    # vendor vive en un volumen de Docker y no en la carpeta de Windows: leer miles de archivos desde Windows
+    # hacía que cada petición tardara ~1.5 s. Lo llena el servicio `composer` de abajo.
+    - vendor:/var/www/html/vendor
+  environment:
+    PHP_CLI_SERVER_WORKERS: 4
+    DB_CONNECTION: pgsql
+    DB_HOST: db
+    DB_PORT: 5432
+    DB_DATABASE: kampus
+    DB_USERNAME: kampus
+    DB_PASSWORD: kampus
+    REVERB_HOST: reverb
+    REVERB_PORT: 8080
+    REVERB_SCHEME: http
+    MAIL_MAILER: smtp
+    MAIL_SCHEME: smtp
+    MAIL_HOST: mailpit
+    MAIL_PORT: 1025
+  depends_on:
+    db:
+      condition: service_healthy
+    composer:
+      condition: service_completed_successfully
+  restart: unless-stopped
+
+services:
+  # Instala las dependencias en el volumen `vendor` y termina. Corre en cada `docker compose up`; si no
+  # cambió composer.lock solo tarda unos segundos. Tras un `composer require` hecho en Windows, corre
+  # `docker compose up -d` y reinicia app, queue y reverb.
+  composer:
+    image: kampus-api-dev
+    volumes:
+      - .:/var/www/html
+      - vendor:/var/www/html/vendor
+      - composer_cache:/composer-cache
+    environment:
+      COMPOSER_CACHE_DIR: /composer-cache
+    command: ["composer", "install", "--no-interaction", "--no-progress"]
+
+  # La API en http://localhost:8000/api
+  app:
+    <<: *api
+    command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+    ports:
+      - "8000:8000"
+
+  # WebSocket (T-13) en ws://localhost:8080
+  reverb:
+    <<: *api
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    ports:
+      - "8080:8080"
+
+  # Cola: correos de verificación y recuperación, y broadcasts como match.created.
+  queue:
+    <<: *api
+    command: ["php", "artisan", "queue:work", "--tries=3"]
+
+  # PostgreSQL. Se publica en el 5433 porque el 5432 lo puede ocupar un PostgreSQL instalado en Windows.
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kampus
+      POSTGRES_USER: kampus
+      POSTGRES_PASSWORD: kampus
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kampus -d kampus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Bandeja de correo de prueba: los correos que manda la API se ven en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "8025:8025"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  vendor:
+  composer_cache:
