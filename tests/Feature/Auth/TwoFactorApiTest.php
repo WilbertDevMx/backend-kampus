@@ -27,7 +27,7 @@ class TwoFactorApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->student = User::factory()->student(University::factory()->create())->create(['email' => 'ana@utt.edu.mx']);
+        $this->student = User::factory()->student(University::factory()->create())->create(['email' => 'ana@uttcampus.edu.mx']);
     }
 
     public function test_enabling_asks_for_the_password_and_is_not_active_until_confirmed(): void
@@ -178,7 +178,7 @@ class TwoFactorApiTest extends TestCase
         $secret = $this->enableTwoFactor($this->student);
         $resetToken = Password::broker()->createToken($this->student);
         $payload = [
-            'email' => 'ana@utt.edu.mx',
+            'email' => 'ana@uttcampus.edu.mx',
             'token' => $resetToken,
             'password' => 'NuevaClave2026',
             'password_confirmation' => 'NuevaClave2026',
@@ -197,7 +197,7 @@ class TwoFactorApiTest extends TestCase
         $this->enableTwoFactor($this->student);
 
         $this->postJson('/api/reset-password', [
-            'email' => 'ana@utt.edu.mx',
+            'email' => 'ana@uttcampus.edu.mx',
             'token' => 'inventado',
             'password' => 'NuevaClave2026',
             'password_confirmation' => 'NuevaClave2026',
@@ -206,13 +206,13 @@ class TwoFactorApiTest extends TestCase
 
     public function test_staff_can_turn_it_on_too(): void
     {
-        $admin = User::factory()->admin()->create(['email' => 'admin@utt.edu.mx']);
+        $admin = User::factory()->admin()->create(['email' => 'admin@uttcampus.edu.mx']);
         $token = $this->tokenFor($admin);
         $secret = $this->as($token)->postJson('/api/two-factor', ['password' => 'password'])->assertCreated()->json('data.secret');
 
         $this->as($token)->postJson('/api/two-factor/confirm', ['code' => $this->otp($secret)])->assertOk();
 
-        $this->postJson('/api/login', ['email' => 'admin@utt.edu.mx', 'password' => 'password'])
+        $this->postJson('/api/login', ['email' => 'admin@uttcampus.edu.mx', 'password' => 'password'])
             ->assertOk()
             ->assertJsonPath('two_factor_required', true);
     }
@@ -248,7 +248,7 @@ class TwoFactorApiTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        return $this->postJson('/api/login', ['email' => 'ana@utt.edu.mx', 'password' => 'password', ...$extra]);
+        return $this->postJson('/api/login', ['email' => 'ana@uttcampus.edu.mx', 'password' => 'password', ...$extra]);
     }
 
     private function tokenFor(User $user): string
