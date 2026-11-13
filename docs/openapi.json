@@ -45,7 +45,11 @@
         },
         {
             "name": "Mensajes",
-            "description": "Chat entre matches (T-14)."
+            "description": "Chat entre matches con texto o imagen (T-14, T-15)."
+        },
+        {
+            "name": "Videollamada",
+            "description": "Iniciar, obtener el token y colgar la videollamada 1 a 1 entre matches (T-19)."
         },
         {
             "name": "Bloqueo y reporte",
@@ -2374,9 +2378,8 @@
                     }
                 ],
                 "requestBody": {
-                    "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/StoreMessageRequest"
                             }
@@ -2398,6 +2401,51 @@
                                     "required": [
                                         "data"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "No fue posible enviar la imagen."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Est\u00e1s enviando demasiadas im\u00e1genes. Espera un momento."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "schema": {
+                                    "type": "integer"
                                 }
                             }
                         }
@@ -2451,6 +2499,106 @@
                                     "required": [
                                         "data"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/matches/{match}/call": {
+            "post": {
+                "operationId": "matches.call.start",
+                "summary": "Empieza la llamada: prepara la sala, entrega el token y avisa a la otra persona",
+                "tags": [
+                    "Videollamada"
+                ],
+                "parameters": [
+                    {
+                        "name": "match",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "matches.call.end",
+                "summary": "Cuelga o rechaza: cierra la sala para los dos y avisa a la otra persona",
+                "tags": [
+                    "Videollamada"
+                ],
+                "parameters": [
+                    {
+                        "name": "match",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/matches/{match}/call/token": {
+            "post": {
+                "operationId": "matches.call.token",
+                "summary": "Contesta (o vuelve a entrar): solo entrega el token, sin avisar a nadie",
+                "tags": [
+                    "Videollamada"
+                ],
+                "parameters": [
+                    {
+                        "name": "match",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
                                 }
                             }
                         }
@@ -5235,6 +5383,13 @@
                             "null"
                         ]
                     },
+                    "image_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Solo en los mensajes de tipo `image` (T-15): URL firmada que vence a los 15 minutos."
+                    },
                     "read_at": {
                         "type": [
                             "string",
@@ -5254,6 +5409,7 @@
                     "sender_id",
                     "type",
                     "body",
+                    "image_url",
                     "read_at",
                     "created_at"
                 ],
@@ -5620,15 +5776,25 @@
             },
             "StoreMessageRequest": {
                 "type": "object",
+                "description": "Un mensaje es texto (`body`, T-14) o una imagen (`image`, T-15). La imagen puede llevar un texto opcional.",
                 "properties": {
                     "body": {
-                        "type": "string",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "maxLength": 5000
+                    },
+                    "image": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "Maximum file size: 5120 kilobytes."
                     }
                 },
-                "required": [
-                    "body"
-                ],
                 "title": "StoreMessageRequest"
             },
             "StoreOfficialGroupRequest": {
