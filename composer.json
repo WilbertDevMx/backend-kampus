@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "dedoc/scramble": "^0.13.53",
         "laravel/framework": "^13.17",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
@@ -51,6 +52,15 @@
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
+        ],
+        "openapi": [
+            "@putenv DB_CONNECTION=sqlite",
+            "@putenv DB_DATABASE=storage/framework/testing/openapi.sqlite",
+            "@putenv DB_URL=",
+            "@php -r \"file_exists('storage/framework/testing/openapi.sqlite') || touch('storage/framework/testing/openapi.sqlite');\"",
+            "@php artisan config:clear --ansi",
+            "@php artisan migrate:fresh --force --no-interaction --ansi",
+            "@php artisan scramble:export --ansi"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

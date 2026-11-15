@@ -19,4 +19,16 @@ return [
         'password' => env('DEMO_PASSWORD'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Documentación interactiva de la API (T-33)
+    |--------------------------------------------------------------------------
+    |
+    | Scramble publica el contrato OpenAPI en /docs/api y /docs/api.json. Fuera de producción está abierto;
+    | en producción solo se ve con API_DOCS_ENABLED=true (por ejemplo, en el entorno de pruebas).
+    |
+    */
+
+    'api_docs_enabled' => (bool) env('API_DOCS_ENABLED', env('APP_ENV', 'production') !== 'production'),
+
 ];

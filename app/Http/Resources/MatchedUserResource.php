@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Lo mínimo para mostrar a la otra persona de un match: nombre, universidad y su primera foto.
+ *
+ * @mixin User
  */
 class MatchedUserResource extends JsonResource
 {

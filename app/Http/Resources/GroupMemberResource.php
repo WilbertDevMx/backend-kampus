@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Integrante de un grupo: solo nombre, rol y desde cuándo está.
+ *
+ * @mixin User
  */
 class GroupMemberResource extends JsonResource
 {

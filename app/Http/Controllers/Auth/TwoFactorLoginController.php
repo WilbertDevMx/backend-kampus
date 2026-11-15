@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\Security\AccessTokenIssuer;
 use App\Support\Security\TwoFactor;
 use App\Support\Security\TwoFactorChallenge;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,8 +17,16 @@ use Illuminate\Validation\ValidationException;
  * Segundo paso del login con la verificación en dos pasos activa (T-47): recibe el `challenge_token` que
  * devolvió POST /api/login y un código de la app (o un código de respaldo) y entonces emite el token.
  */
+#[Group('Autenticación', weight: 1)]
 class TwoFactorLoginController extends Controller
 {
+    /**
+     * Iniciar sesión: segundo paso con el código.
+     *
+     * Recibe el `challenge_token` del primer paso y un `code` de la app (o un `recovery_code`).
+     *
+     * @unauthenticated
+     */
     public function __invoke(Request $request, TwoFactor $twoFactor, TwoFactorChallenge $challenges, AccessTokenIssuer $issuer): JsonResponse
     {
         $validated = $request->validate([

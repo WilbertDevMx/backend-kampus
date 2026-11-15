@@ -10,6 +10,7 @@ use App\Http\Requests\Groups\UpdateGroupRequest;
 use App\Http\Resources\GroupResource;
 use App\Models\Group;
 use App\Models\User;
+use Dedoc\Scramble\Attributes\Group as ApiGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -22,6 +23,7 @@ use Illuminate\Validation\Rule;
 /**
  * Explorar, crear, editar y borrar grupos (T-17, RF-11, RF-12).
  */
+#[ApiGroup('Grupos', 'Grupos, integrantes, imagen y actividades (T-17).', weight: 11)]
 class GroupController extends Controller
 {
     /**

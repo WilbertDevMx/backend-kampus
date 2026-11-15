@@ -7,6 +7,7 @@ use App\Enums\ReportStatus;
 use App\Models\Block;
 use App\Models\Report;
 use App\Models\UserMatch;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,7 @@ use Illuminate\Validation\ValidationException;
  * Reportar a un estudiante (T-21, RF-14). El reporte lo atiende el moderador de la universidad del
  * **reportado** (`reports.university_id`) o un administrador (T-37). Se puede bloquear en el mismo paso.
  */
+#[Group('Bloqueo y reporte', weight: 10)]
 class ReportController extends Controller
 {
     public function store(Request $request): JsonResponse

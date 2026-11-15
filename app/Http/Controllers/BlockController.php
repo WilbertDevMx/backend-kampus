@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Models\Block;
 use App\Models\User;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -16,6 +17,7 @@ use Illuminate\Validation\ValidationException;
  * Un bloqueo, en cualquier sentido, saca a las dos personas del descubrimiento, de la lista de matches y del
  * chat. No se le avisa a la persona bloqueada.
  */
+#[Group('Bloqueo y reporte', 'Bloquear, desbloquear y reportar estudiantes (T-21).', weight: 10)]
 class BlockController extends Controller
 {
     /**
