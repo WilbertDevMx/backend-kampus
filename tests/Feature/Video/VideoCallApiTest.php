@@ -69,9 +69,34 @@ class VideoCallApiTest extends TestCase
             return $event->broadcastOn()[0]->name === "private-user.{$this->beto->id}"
                 && $event->broadcastAs() === 'call.started'
                 && $payload['match_id'] === $this->match->id
+                && $payload['type'] === 'video'
                 && $payload['caller']['id'] === $this->ana->id
                 && ! array_key_exists('token', $payload);
         });
+    }
+
+    public function test_a_voice_call_uses_the_same_room_and_tells_the_other_person_it_is_audio(): void
+    {
+        Event::fake([VideoCallStarted::class]);
+        Sanctum::actingAs($this->ana);
+
+        $this->postJson("/api/matches/{$this->match->id}/call", ['type' => 'audio'])
+            ->assertCreated()
+            ->assertJsonPath('data.room', "match-{$this->match->id}");
+
+        Event::assertDispatched(VideoCallStarted::class, fn (VideoCallStarted $event): bool => $event->broadcastWith()['call']['type'] === 'audio');
+    }
+
+    public function test_an_unknown_call_type_is_rejected_without_ringing(): void
+    {
+        Event::fake([VideoCallStarted::class]);
+        Sanctum::actingAs($this->ana);
+
+        $this->postJson("/api/matches/{$this->match->id}/call", ['type' => 'pantalla'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['type' => 'El tipo de llamada debe ser video o audio.']);
+
+        Event::assertNotDispatched(VideoCallStarted::class);
     }
 
     public function test_answering_returns_a_token_without_ringing_again(): void

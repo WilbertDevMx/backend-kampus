@@ -2512,6 +2512,7 @@
         "/matches/{match}/call": {
             "post": {
                 "operationId": "matches.call.start",
+                "description": "`type` es `video` (por defecto) o `audio` para una llamada de voz; solo cambia el aviso a la otra persona.",
                 "summary": "Empieza la llamada: prepara la sala, entrega el token y avisa a la otra persona",
                 "tags": [
                     "Videollamada"
@@ -2526,6 +2527,15 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StartCallRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -2539,6 +2549,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -5715,6 +5728,24 @@
                     "created_at"
                 ],
                 "title": "StaffResource"
+            },
+            "StartCallRequest": {
+                "type": "object",
+                "description": "Empezar una llamada (T-19, T-20): `type` es `video` (videollamada) o `audio` (llamada de voz).\nSin `type` es videollamada, como antes. La sala y el token son los mismos; el tipo solo le dice a la otra\npersona qu\u00e9 tipo de llamada le entra.",
+                "properties": {
+                    "type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "video",
+                            "audio",
+                            null
+                        ]
+                    }
+                },
+                "title": "StartCallRequest"
             },
             "StoreGroupActivityRequest": {
                 "type": "object",

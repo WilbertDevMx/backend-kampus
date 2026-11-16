@@ -87,10 +87,11 @@ Echo.private(`chat.${matchId}`).listen('.message.sent', ({ message }) => {
 
 Los eventos de match y de mensaje se entregan en los canales privados autorizados por el backend.
 
-La videollamada (T-19) avisa por el canal propio `user.{userId}` de la otra persona:
+La videollamada (T-19) y la llamada de voz (T-20) avisan por el canal propio `user.{userId}` de la otra persona:
 
-- `call.started`: llamada entrante, con `call.match_id` y `call.caller` (id, nombre, universidad y foto). No trae
-  el token: para contestar, la app pide el suyo con `POST /api/matches/{matchId}/call/token`.
+- `call.started`: llamada entrante, con `call.match_id`, `call.type` (`video` o `audio`, según lo que se mandó en
+  `POST /api/matches/{matchId}/call`; `video` si no se mandó) y `call.caller` (id, nombre, universidad y foto). No
+  trae el token: para contestar, la app pide el suyo con `POST /api/matches/{matchId}/call/token`.
 - `call.ended`: la otra persona colgó o rechazó, con `call.match_id` y `call.ended_by`.
 
 ## Prueba manual
