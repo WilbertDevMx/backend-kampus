@@ -52,9 +52,12 @@ services:
     command: ["composer", "install", "--no-interaction", "--no-progress"]
 
   # La API en http://localhost:8000/api
+  # `--no-reload` es obligatorio: sin él, `artisan serve` le quita al proceso de PHP las variables de
+  # `environment` (DB_HOST=db…) para releer el .env, y la API busca la base en 127.0.0.1:5432.
+  # Por lo mismo, si cambias el .env reinicia el contenedor: `docker compose restart app`.
   app:
     <<: *api
-    command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+    command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000", "--no-reload"]
     ports:
       - "8000:8000"
 
