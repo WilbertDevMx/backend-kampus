@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\VideoCallEnded;
 use App\Events\VideoCallStarted;
+use App\Http\Requests\Video\StartCallRequest;
 use App\Models\User;
 use App\Models\UserMatch;
 use App\Video\VideoCallAccess;
@@ -16,7 +17,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Videollamada 1 a 1 entre los dos de un match (T-19, RF-10).
+ * Videollamada 1 a 1 entre los dos de un match (T-19, RF-10), también como llamada de voz (T-20).
  *
  * - Solo los dos del match reciben un token, y solo si el match sigue visible: nadie suspendido y sin bloqueo.
  * - La sala es una por match y admite como máximo 2 participantes.
@@ -31,16 +32,19 @@ class VideoCallController extends Controller
 
     /**
      * Empieza la llamada: prepara la sala, entrega el token y avisa a la otra persona.
+     *
+     * `type` es `video` (por defecto) o `audio` para una llamada de voz; solo cambia el aviso a la otra persona.
      */
-    public function start(Request $request, int $match): JsonResponse
+    public function start(StartCallRequest $request, int $match): JsonResponse
     {
         $user = $request->user();
         $conversation = $this->visibleMatch($user, $match);
+        $type = $request->callType();
 
-        return $this->whenAvailable(function () use ($conversation, $user): JsonResponse {
+        return $this->whenAvailable(function () use ($conversation, $user, $type): JsonResponse {
             $access = $this->join($conversation, $user);
 
-            VideoCallStarted::dispatch($conversation, $user, $conversation->otherUser($user));
+            VideoCallStarted::dispatch($conversation, $user, $conversation->otherUser($user), $type);
 
             return $this->accessResponse($access, 201);
         });

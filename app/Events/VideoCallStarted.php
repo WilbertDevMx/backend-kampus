@@ -12,8 +12,9 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Alguien del match empezó una videollamada (T-19). Se avisa a la otra persona por su canal `user.{id}`
- * para que la app muestre la llamada entrante. El aviso no trae el token: quien contesta pide el suyo.
+ * Alguien del match empezó una videollamada (T-19) o una llamada de voz (T-20). Se avisa a la otra persona por
+ * su canal `user.{id}` para que la app muestre la llamada entrante. El aviso no trae el token: quien contesta
+ * pide el suyo. `type` (`video` o `audio`) le dice a la app qué tipo de llamada mostrar.
  */
 class VideoCallStarted implements ShouldBroadcast
 {
@@ -23,6 +24,7 @@ class VideoCallStarted implements ShouldBroadcast
         public UserMatch $match,
         public User $caller,
         public User $callee,
+        public string $type = 'video',
     ) {}
 
     /**
@@ -48,6 +50,7 @@ class VideoCallStarted implements ShouldBroadcast
         return [
             'call' => [
                 'match_id' => $this->match->getKey(),
+                'type' => $this->type,
                 'caller' => (new MatchedUserResource($this->caller))->resolve(),
             ],
         ];
