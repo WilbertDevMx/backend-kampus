@@ -97,19 +97,29 @@ class NearbyApiTest extends TestCase
 
         $positions = collect($response->json('data'))->mapWithKeys(fn (array $user) => [$user['id'] => $user['nearby']['position']]);
 
-        // En el centro de su zona, con un desplazamiento de 150 a 500 m.
-        $fromZone = Geohash::distanceKm($this->zone->center_lat, $this->zone->center_lng, $positions[$withZone->id]['lat'], $positions[$withZone->id]['lng']);
-        $this->assertGreaterThanOrEqual(0.14, $fromZone);
-        $this->assertLessThanOrEqual(0.51, $fromZone);
-
-        // Sin zona: alrededor del centro de su celda de ~5 km, no de la de ~1 km.
-        $coarse = Geohash::center(substr($withoutZone->location->geohash, 0, 5));
-        $fromCoarse = Geohash::distanceKm($coarse['lat'], $coarse['lng'], $positions[$withoutZone->id]['lat'], $positions[$withoutZone->id]['lng']);
-        $this->assertGreaterThanOrEqual(0.14, $fromCoarse);
-        $this->assertLessThanOrEqual(0.51, $fromCoarse);
+        // Con o sin zona declarada: alrededor del centro de su última celda, desplazado de 150 a 500 m, nunca
+        // en el centro exacto de la celda.
+        foreach ([$withZone, $withoutZone] as $student) {
+            $this->assertOffsetFromCell($student->location->geohash, $positions[$student->id]);
+        }
+        $this->assertOffsetFromCell($viewer->location->geohash, $response->json('meta.center'));
 
         // El desplazamiento es fijo: el punto no cambia entre consultas.
         $this->assertSame($response->json('data'), $this->getJson('/api/discover/nearby')->json('data'));
+    }
+
+    public function test_the_declared_zone_no_longer_moves_the_point(): void
+    {
+        // Zona declarada al otro lado de la ciudad: no debe jalar el punto hacia allá.
+        $farZone = Zone::factory()->create(['center_lat' => 25.60, 'center_lng' => -103.25]);
+        $viewer = $this->nearbyStudent(self::LAT, self::LNG);
+        $student = $this->nearbyStudent(self::LAT + 0.005, self::LNG, profile: ['zone_id' => $farZone->id]);
+        Sanctum::actingAs($viewer);
+
+        $position = $this->getJson('/api/discover/nearby')->assertOk()->json('data.0.nearby.position');
+
+        $this->assertOffsetFromCell($student->location->geohash, $position);
+        $this->assertGreaterThan(5, Geohash::distanceKm($farZone->center_lat, $farZone->center_lng, $position['lat'], $position['lng']));
     }
 
     public function test_blocked_and_already_evaluated_students_do_not_appear(): void
@@ -165,6 +175,20 @@ class NearbyApiTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $fromUadec->id);
         $this->getJson('/api/discover/nearby?limit=51')->assertInvalid(['limit']);
+    }
+
+    /**
+     * El punto queda a 150–500 m del centro de la celda de ~1 km.
+     *
+     * @param  array{lat: float, lng: float}  $position
+     */
+    private function assertOffsetFromCell(string $cell, array $position): void
+    {
+        $center = Geohash::center($cell);
+        $km = Geohash::distanceKm($center['lat'], $center['lng'], $position['lat'], $position['lng']);
+
+        $this->assertGreaterThanOrEqual(0.14, $km);
+        $this->assertLessThanOrEqual(0.51, $km);
     }
 
     /**
