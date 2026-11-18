@@ -8,16 +8,17 @@ use App\Support\Location\Geohash;
 /**
  * Dónde aparece un estudiante en el mapa de "Cerca" y a qué distancia aproximada está (T-35, RF-19, RNF-11).
  *
- * - Posición: el centro **público** de su zona (campus o colonia) más un desplazamiento fijo de 150 a 500 m
- *   que sale de su id y de APP_KEY. Es siempre el mismo para la misma persona, así que el punto no "brinca"
- *   entre consultas ni se puede promediar. Sin zona declarada, se usa el centro de su celda de ~5 km.
+ * - Posición: el centro de la última celda de ~1 km que compartió con "Cerca de ti" más un desplazamiento
+ *   fijo de 150 a 500 m que sale de su id y de APP_KEY. Es siempre el mismo para la misma persona, así que
+ *   el punto no "brinca" entre consultas ni se puede promediar. La zona declarada (catálogo de campus y
+ *   colonias) ya no se usa aquí: sus centros eran aproximados y movían a todos a otro lado.
  * - Distancia: entre los centros de las dos celdas de ~1 km, redondeada a kilómetros enteros.
  *
- * Nunca sale de aquí la celda del estudiante ni una coordenada suya.
+ * Nunca sale de aquí la celda del estudiante ni su centro exacto, solo el punto ya desplazado.
  */
 final readonly class NearbyPlacement
 {
-    /** Desplazamiento mínimo y máximo, en metros, desde el centro de la zona. */
+    /** Desplazamiento mínimo y máximo, en metros, desde el centro de la celda. */
     private const OFFSET_MIN_M = 150.0;
 
     private const OFFSET_MAX_M = 500.0;
@@ -43,14 +44,12 @@ final readonly class NearbyPlacement
     }
 
     /**
+     * @param  string  $cell  Última celda de ~1 km que compartió el estudiante.
      * @return array{lat: float, lng: float}
      */
     public static function mapPosition(User $user, string $cell): array
     {
-        $zone = $user->profile?->zone;
-        $base = $zone === null
-            ? Geohash::center(substr($cell, 0, 5))
-            : ['lat' => $zone->center_lat, 'lng' => $zone->center_lng];
+        $base = Geohash::center($cell);
 
         $seed = hash_hmac('sha256', 'nearby:'.$user->getKey(), (string) config('app.key'), true);
         $angle = self::fraction($seed, 0) * 2 * M_PI;

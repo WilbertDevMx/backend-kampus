@@ -51,6 +51,26 @@ class DemoSeeder extends Seeder
     /** Colonia céntrica de la cuenta para presentar (ZoneSeeder). */
     private const PRESENTER_ZONE = 'Torreón Jardín';
 
+    /**
+     * Ubicación real de cada campus (OpenStreetMap), de donde salen las celdas de "Cerca de ti".
+     * No se usan los centros de ZoneSeeder porque son aproximados.
+     *
+     * @var array<string, array{float, float}>
+     */
+    private const CAMPUS_POINTS = [
+        'UTT' => [25.5300, -103.3212],
+        'UAdeC' => [25.5346, -103.4419],
+        'ITL' => [25.5330, -103.4380],
+    ];
+
+    /**
+     * Punto entre los tres campus para la cuenta para presentar: así quedan dentro de los 10 km de la vista
+     * Cerca casi todos los que tienen "Cerca de ti".
+     *
+     * @var array{float, float}
+     */
+    private const PRESENTER_POINT = [25.5325, -103.4004];
+
     private const SEED = 2026;
 
     private const FIRST_NAMES = [
@@ -256,13 +276,16 @@ class DemoSeeder extends Seeder
         // Perfil obligatorio (T-49): sin `completed_at` no puede descubrir ni sale en Descubrir.
         $profile->syncCompletion();
 
-        // "Cerca de ti": una celda de ~1 km a menos de ~1.5 km del centro de su zona, como la mandaría el celular.
-        if ($nearby && $zone !== null) {
+        // "Cerca de ti": una celda de ~1 km a menos de ~1.5 km de su campus real, como la mandaría el celular.
+        // La vista Cerca ya no usa la zona declarada, sino esta celda.
+        if ($nearby) {
+            [$lat, $lng] = $presenter ? self::PRESENTER_POINT : self::CAMPUS_POINTS[$shortName];
+
             UserLocation::query()->create([
                 'user_id' => $user->getKey(),
                 'geohash' => Geohash::encode(
-                    $zone->center_lat + $this->random->getInt(-130, 130) / 10000,
-                    $zone->center_lng + $this->random->getInt(-130, 130) / 10000,
+                    $lat + $this->random->getInt(-130, 130) / 10000,
+                    $lng + $this->random->getInt(-130, 130) / 10000,
                     6,
                 ),
             ]);

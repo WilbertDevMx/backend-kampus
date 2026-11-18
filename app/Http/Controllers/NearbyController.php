@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 
 /**
  * Vista "Cerca" del descubrimiento (T-35, RF-19, RNF-11): estudiantes con "Cerca de ti" activo a unos
- * kilómetros de quien consulta, en el centro de su zona y con la distancia aproximada.
+ * kilómetros de quien consulta, alrededor de la última celda que compartieron y con la distancia aproximada.
  *
  * Sigue las mismas reglas del descubrimiento (`DiscoveryQuery`): solo estudiantes disponibles, sin
  * bloqueados en ningún sentido, sin perfiles ya evaluados y con los filtros que el alumno guardó.
@@ -52,7 +52,7 @@ class NearbyController extends Controller
         $nearby = DiscoveryQuery::for($viewer)
             ->withFilters($filters)
             ->inCells(Geohash::withNeighbors(substr($viewerCell, 0, 5)))
-            ->take(self::MAX_CANDIDATES, ['location', 'profile.zone'])
+            ->take(self::MAX_CANDIDATES, ['location'])
             ->map(fn (User $user): array => [
                 'user' => $user,
                 'placement' => NearbyPlacement::for($user, $user->location->geohash, $origin),
@@ -68,7 +68,7 @@ class NearbyController extends Controller
             'meta' => [
                 'radius_km' => self::RADIUS_KM,
                 // Para centrar el mapa: el punto de quien consulta, calculado igual que el de los demás.
-                'center' => NearbyPlacement::mapPosition($viewer->loadMissing('profile.zone'), $viewerCell),
+                'center' => NearbyPlacement::mapPosition($viewer, $viewerCell),
             ],
         ]);
     }
