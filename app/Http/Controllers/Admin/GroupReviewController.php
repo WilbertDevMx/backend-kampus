@@ -25,27 +25,34 @@ use Illuminate\Validation\ValidationException;
 class GroupReviewController extends Controller
 {
     /**
-     * Cola de revisión (`status=pending`, por defecto, del más antiguo al más nuevo) o historial de
-     * aprobados y rechazados (del más reciente al más antiguo).
+     * Cola de revisión (`status=pending`, por defecto, del más antiguo al más nuevo), historial de
+     * aprobados y rechazados (del más reciente al más antiguo) o todos los grupos (`status=all`, del
+     * más nuevo al más antiguo, T-44).
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $validated = $request->validate([
-            'status' => ['sometimes', Rule::enum(GroupStatus::class)],
+            'status' => ['sometimes', Rule::in(['all', ...array_column(GroupStatus::cases(), 'value')])],
         ]);
-        $status = GroupStatus::from($validated['status'] ?? GroupStatus::Pending->value);
+        $value = $validated['status'] ?? GroupStatus::Pending->value;
+        $status = $value === 'all' ? null : GroupStatus::from($value);
 
         $groups = Group::query()
             ->reviewableBy($request->user())
-            ->where('groups.status', $status)
+            ->when($status !== null, fn ($query) => $query->where('groups.status', $status))
             ->with(['university', 'creator', 'reviewer'])
             ->withCount('members')
             ->when(
-                $status === GroupStatus::Pending,
-                fn ($query) => $query->orderBy('groups.created_at'),
-                fn ($query) => $query->orderByDesc('groups.reviewed_at'),
+                $status === null,
+                fn ($query) => $query->orderByDesc('groups.created_at')->orderByDesc('groups.id'),
+                fn ($query) => $query
+                    ->when(
+                        $status === GroupStatus::Pending,
+                        fn ($query) => $query->orderBy('groups.created_at'),
+                        fn ($query) => $query->orderByDesc('groups.reviewed_at'),
+                    )
+                    ->orderBy('groups.id'),
             )
-            ->orderBy('groups.id')
             ->paginate(20);
 
         return AdminGroupResource::collection($groups);
