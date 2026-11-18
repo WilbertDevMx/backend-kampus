@@ -4366,7 +4366,7 @@
         "/admin/groups": {
             "get": {
                 "operationId": "admin.groups.index",
-                "summary": "Cola de revisi\u00f3n (`status=pending`, por defecto, del m\u00e1s antiguo al m\u00e1s nuevo) o historial de\naprobados y rechazados (del m\u00e1s reciente al m\u00e1s antiguo)",
+                "summary": "Cola de revisi\u00f3n (`status=pending`, por defecto, del m\u00e1s antiguo al m\u00e1s nuevo), historial de\naprobados y rechazados (del m\u00e1s reciente al m\u00e1s antiguo) o todos los grupos (`status=all`, del\nm\u00e1s nuevo al m\u00e1s antiguo, T-44)",
                 "tags": [
                     "Administraci\u00f3n"
                 ],
@@ -4375,7 +4375,13 @@
                         "name": "status",
                         "in": "query",
                         "schema": {
-                            "$ref": "#/components/schemas/GroupStatus"
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "pending",
+                                "approved",
+                                "rejected"
+                            ]
                         }
                     }
                 ],
@@ -5237,16 +5243,6 @@
                     "created_at"
                 ],
                 "title": "GroupResource"
-            },
-            "GroupStatus": {
-                "type": "string",
-                "description": "Estado de aprobaci\u00f3n de un grupo (RF-23). Solo los `approved` aparecen en la exploraci\u00f3n.\n",
-                "enum": [
-                    "pending",
-                    "approved",
-                    "rejected"
-                ],
-                "title": "GroupStatus"
             },
             "Interest": {
                 "type": "object",
