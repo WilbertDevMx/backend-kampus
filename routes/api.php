@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\GroupReviewController;
 use App\Http\Controllers\Admin\OfficialGroupController;
+use App\Http\Controllers\Admin\ReportReviewController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Auth\AuthTokenController;
 use App\Http\Controllers\Auth\SessionController;
@@ -196,5 +197,14 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('admin')->name('admin.')
         Route::post('/groups/{group}/reject', [GroupReviewController::class, 'reject'])
             ->whereNumber('group')
             ->name('groups.reject');
+
+        // Reportes: los del reportado de su universidad para el moderador; todos para el administrador (T-37, RF-15).
+        Route::get('/reports', [ReportReviewController::class, 'index'])->name('reports.index');
+        Route::get('/reports/{report}', [ReportReviewController::class, 'show'])
+            ->whereNumber('report')
+            ->name('reports.show');
+        Route::patch('/reports/{report}', [ReportReviewController::class, 'update'])
+            ->whereNumber('report')
+            ->name('reports.update');
     });
 });
