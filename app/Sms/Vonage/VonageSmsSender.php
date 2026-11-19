@@ -8,6 +8,7 @@ use App\Support\PhoneNumber;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Manda SMS con la API de SMS de Vonage (`SMS_DRIVER=vonage`). Usa su API HTTP directamente, sin SDK, como
@@ -53,9 +54,10 @@ class VonageSmsSender implements SmsSender
                     'from' => $this->from,
                     // Vonage espera el número sin el "+".
                     'to' => ltrim($to, '+'),
-                    'text' => $message,
-                    // Acentos y "ñ" en español.
-                    'type' => 'unicode',
+                    // Sin acentos ni "ñ" ("código" -> "codigo"): en texto normal (GSM-7) un SMS admite 160
+                    // caracteres; en Unicode solo 70, y un código de 119 caracteres se cobraba como 2 SMS.
+                    'text' => Str::ascii($message),
+                    'type' => 'text',
                 ]);
         } catch (ConnectionException $exception) {
             throw new SmsDeliveryFailed('No se pudo conectar con Vonage.', previous: $exception);
