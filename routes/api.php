@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\GroupReviewController;
 use App\Http\Controllers\Admin\OfficialGroupController;
 use App\Http\Controllers\Admin\ReportReviewController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\UserModerationController;
 use App\Http\Controllers\Auth\AuthTokenController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\TwoFactorController;
@@ -206,5 +207,13 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('admin')->name('admin.')
         Route::patch('/reports/{report}', [ReportReviewController::class, 'update'])
             ->whereNumber('report')
             ->name('reports.update');
+
+        // Consulta de usuarios y suspensión: el moderador, solo estudiantes de su universidad y con un reporte (T-43, RF-24).
+        Route::prefix('users')->name('users.')->whereNumber('user')->group(function () {
+            Route::get('/', [UserModerationController::class, 'index'])->name('index');
+            Route::get('/{user}', [UserModerationController::class, 'show'])->name('show');
+            Route::post('/{user}/suspend', [UserModerationController::class, 'suspend'])->name('suspend');
+            Route::post('/{user}/reactivate', [UserModerationController::class, 'reactivate'])->name('reactivate');
+        });
     });
 });

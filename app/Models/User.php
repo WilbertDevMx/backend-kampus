@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ModerationTarget;
 use App\Enums\UserRole;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
@@ -113,6 +114,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function reportsReceived(): HasMany
     {
         return $this->hasMany(Report::class, 'reported_id');
+    }
+
+    /**
+     * Acciones del staff sobre esta cuenta en la bitácora: suspensiones, reactivaciones, alta de staff...
+     *
+     * @return HasMany<ModerationAction, $this>
+     */
+    public function moderationHistory(): HasMany
+    {
+        return $this->hasMany(ModerationAction::class, 'target_id')
+            ->where('moderation_actions.target_type', ModerationTarget::User);
     }
 
     public function isSuspended(): bool

@@ -5003,6 +5003,431 @@
                 }
             }
         },
+        "/admin/users": {
+            "get": {
+                "operationId": "admin.users.index",
+                "summary": "Lista y busca cuentas. `search` busca en el nombre y el correo; `status` filtra activas o\nsuspendidas; `sort=reports` pone primero a quien tiene m\u00e1s reportes pendientes",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "active",
+                                "suspended"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/UserRole"
+                        }
+                    },
+                    {
+                        "name": "university_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "name",
+                                "reports",
+                                "newest"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `AdminUserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminUserResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}": {
+            "get": {
+                "operationId": "admin.users.show",
+                "summary": "Detalle de una cuenta: perfil, reportes recibidos (los 20 m\u00e1s recientes) e historial de moderaci\u00f3n",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminUserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "profile",
+                                                        "reports",
+                                                        "moderation_history"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}/suspend": {
+            "post": {
+                "operationId": "admin.users.suspend",
+                "summary": "Suspende una cuenta de estudiante y cierra sus sesiones. El moderador debe indicar un reporte sobre\nesa cuenta (`report_id`); para el administrador es opcional. Si el reporte segu\u00eda pendiente, queda\nresuelto con el mismo motivo",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    },
+                                    "report_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminUserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "profile",
+                                                        "reports",
+                                                        "moderation_history"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}/reactivate": {
+            "post": {
+                "operationId": "admin.users.reactivate",
+                "summary": "Reactiva una cuenta de estudiante suspendida. Puede volver a iniciar sesi\u00f3n",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminUserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "profile",
+                                                        "reports",
+                                                        "moderation_history"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/user": {
             "get": {
                 "operationId": "user.show",
@@ -5364,6 +5789,276 @@
                     "created_at"
                 ],
                 "title": "AdminReportResource"
+            },
+            "AdminUserResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "student",
+                            "moderator",
+                            "admin"
+                        ]
+                    },
+                    "university": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "short_name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "short_name"
+                        ]
+                    },
+                    "email_verified": {
+                        "type": "boolean"
+                    },
+                    "suspended": {
+                        "type": "boolean"
+                    },
+                    "suspended_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "reports_count": {
+                        "type": "integer"
+                    },
+                    "pending_reports_count": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "profile": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "career": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "semester": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "bio": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "completed": {
+                                "type": "boolean"
+                            },
+                            "photos": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "position": {
+                                            "type": "integer"
+                                        },
+                                        "temporary_url": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "position",
+                                        "temporary_url"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "career",
+                            "semester",
+                            "bio",
+                            "completed",
+                            "photos"
+                        ]
+                    },
+                    "reports": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "reason": {
+                                    "type": "string",
+                                    "enum": [
+                                        "acoso",
+                                        "perfil_falso",
+                                        "contenido_inapropiado",
+                                        "spam",
+                                        "otro"
+                                    ]
+                                },
+                                "description": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "enum": [
+                                        "pending",
+                                        "reviewed",
+                                        "dismissed"
+                                    ]
+                                },
+                                "reporter": {
+                                    "type": [
+                                        "object",
+                                        "null"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                },
+                                "created_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "reason",
+                                "description",
+                                "status",
+                                "reporter",
+                                "created_at"
+                            ]
+                        }
+                    },
+                    "moderation_history": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "action": {
+                                    "type": "string",
+                                    "enum": [
+                                        "suspend_user",
+                                        "reactivate_user",
+                                        "delete_user",
+                                        "approve_group",
+                                        "reject_group",
+                                        "create_staff",
+                                        "deactivate_staff",
+                                        "resolve_report",
+                                        "dismiss_report"
+                                    ]
+                                },
+                                "reason": {
+                                    "type": "string"
+                                },
+                                "report_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "actor": {
+                                    "type": [
+                                        "object",
+                                        "null"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                },
+                                "created_at": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "action",
+                                "reason",
+                                "report_id",
+                                "actor",
+                                "created_at"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "role",
+                    "university",
+                    "email_verified",
+                    "suspended",
+                    "suspended_at",
+                    "reports_count",
+                    "pending_reports_count",
+                    "created_at"
+                ],
+                "title": "AdminUserResource"
             },
             "DiscoveryCardResource": {
                 "type": "object",
@@ -6478,6 +7173,16 @@
                     "profile_completed"
                 ],
                 "title": "UserResource"
+            },
+            "UserRole": {
+                "type": "string",
+                "description": "Roles de las cuentas (users.role). El registro p\u00fablico solo crea estudiantes; el staff lo crea un administrador (RF-22). Ver docs/base-de-datos/esquema.md, secci\u00f3n 3.\n",
+                "enum": [
+                    "student",
+                    "moderator",
+                    "admin"
+                ],
+                "title": "UserRole"
             },
             "ZoneResource": {
                 "type": "object",
