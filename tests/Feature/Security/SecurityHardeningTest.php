@@ -87,6 +87,9 @@ class SecurityHardeningTest extends TestCase
                     'role' => 'student',
                     'university_id' => null,
                     'profile_completed' => false,
+                    // Celular para recuperar la contraseña (T-45): solo lo ve la propia cuenta.
+                    'phone' => null,
+                    'phone_verified' => false,
                 ],
             ]);
     }

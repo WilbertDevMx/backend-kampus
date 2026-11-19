@@ -503,6 +503,386 @@
                 "security": []
             }
         },
+        "/forgot-password/sms": {
+            "post": {
+                "operationId": "password.sms",
+                "description": "Responde lo mismo exista o no la cuenta y tenga o no celular verificado.",
+                "summary": "Pedir un c\u00f3digo por SMS para restablecer la contrase\u00f1a",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Si la cuenta tiene un celular verificado, te enviamos un c\u00f3digo por SMS. Vence en 10 minutos."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/forgot-password/sms/verify": {
+            "post": {
+                "operationId": "password.sms.verify",
+                "description": "Con el token se llama a `POST /api/reset-password`, como con el enlace del correo. El c\u00f3digo es de un\nsolo uso y se invalida tras 5 intentos fallidos.",
+                "summary": "Cambiar el c\u00f3digo del SMS por el token para restablecer la contrase\u00f1a",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/ForgotPasswordRequest"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "code"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "C\u00f3digo correcto. Ahora elige tu nueva contrase\u00f1a."
+                                        },
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "two_factor_required": {
+                                            "type": "boolean",
+                                            "description": "Si es `true`, `POST /reset-password` tambi\u00e9n pide `code` o `recovery_code` de la app (T-47)."
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "token",
+                                        "email",
+                                        "two_factor_required"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/phone": {
+            "get": {
+                "operationId": "phone.show",
+                "summary": "Celular registrado y si est\u00e1 verificado",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "verified": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "phone",
+                                                "verified"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "phone.store",
+                "summary": "Pide un c\u00f3digo para agregar o cambiar el celular. El n\u00famero no se guarda hasta confirmarlo",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "phone": {
+                                        "type": "string",
+                                        "maxLength": 25
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "phone",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "const": 600
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "expires_in"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Ya te enviamos un c\u00f3digo hace poco. Espera un momento antes de pedir otro."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "phone.destroy",
+                "summary": "Quita el celular. La contrase\u00f1a ya no se podr\u00e1 recuperar por SMS",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Quitamos tu celular."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "verified": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "phone",
+                                                "verified"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/phone/verify": {
+            "post": {
+                "operationId": "phone.verify",
+                "summary": "Confirma el celular con el c\u00f3digo del SMS y lo guarda como verificado",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "code"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Tu celular qued\u00f3 verificado. Ya puedes recuperar tu contrase\u00f1a por SMS."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "verified": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "phone",
+                                                "verified"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/sessions": {
             "get": {
                 "operationId": "sessions.index",
@@ -5986,6 +6366,16 @@
                     "profile_completed": {
                         "type": "boolean",
                         "description": "Si es `false`, la app manda al estudiante a terminar su perfil antes de usarla (T-49).\nEl staff no tiene perfil social, as\u00ed que para \u00e9l siempre es `true`."
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Celular verificado para recuperar la contrase\u00f1a por SMS (T-45). Este recurso solo lo ve la propia cuenta."
+                    },
+                    "phone_verified": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -5995,7 +6385,9 @@
                     "email_verified_at",
                     "role",
                     "university_id",
-                    "profile_completed"
+                    "profile_completed",
+                    "phone",
+                    "phone_verified"
                 ],
                 "title": "UserResource"
             },

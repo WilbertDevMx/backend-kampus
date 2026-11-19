@@ -35,6 +35,14 @@ return [
         'api_secret' => env('LIVEKIT_API_SECRET'),
     ],
 
+    // SMS (T-45): API de SMS de Vonage. Solo se usa con SMS_DRIVER=vonage. VONAGE_SMS_FROM es el remitente
+    // que ve el alumno (hasta 11 letras o números).
+    'vonage' => [
+        'key' => env('VONAGE_KEY'),
+        'secret' => env('VONAGE_SECRET'),
+        'sms_from' => env('VONAGE_SMS_FROM', 'Kampus'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
