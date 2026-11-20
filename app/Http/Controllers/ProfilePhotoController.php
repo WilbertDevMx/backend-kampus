@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ProfileResource;
 use App\Support\Images\ImageSanitizer;
+use App\Support\Images\ImageUpload;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -11,22 +13,23 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
+#[Group('Perfil', weight: 4)]
 class ProfilePhotoController extends Controller
 {
     public function store(Request $request, ImageSanitizer $sanitizer): ProfileResource|Response
     {
         $validated = $request->validate([
-            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photo' => ['required', ...ImageUpload::rules()],
             'position' => ['sometimes', 'integer', 'between:1,5'],
-        ]);
+        ], ImageUpload::messages('photo'));
 
         // RNF-11: las fotos del celular traen la ubicación GPS exacta en el EXIF. Se re-codifican antes
-        // de guardarlas, y nunca se guarda el archivo original.
+        // de guardarlas (enderezadas y reducidas), y nunca se guarda el archivo original.
         try {
             $cleanImage = $sanitizer->sanitize($validated['photo']);
-        } catch (InvalidArgumentException) {
+        } catch (InvalidArgumentException $error) {
             throw ValidationException::withMessages([
-                'photo' => 'El archivo no es una imagen válida.',
+                'photo' => $error->getMessage(),
             ]);
         }
 
@@ -63,6 +66,7 @@ class ProfilePhotoController extends Controller
             'path' => $path,
             'position' => $position,
         ]);
+        $profile->syncCompletion();
 
         return (new ProfileResource($user->load(['profile.interests', 'profile.photos'])))
             ->response()
@@ -79,6 +83,8 @@ class ProfilePhotoController extends Controller
         }
 
         $photoRecord->delete();
+        // Sin fotos el perfil vuelve a estar incompleto y sale del descubrimiento (T-49).
+        $profile->syncCompletion();
 
         return new ProfileResource($request->user()->load(['profile.interests', 'profile.photos']));
     }

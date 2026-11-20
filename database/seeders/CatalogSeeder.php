@@ -18,7 +18,7 @@ class CatalogSeeder extends Seeder
             [
                 'name' => 'Universidad Tecnológica de Torreón',
                 'short_name' => 'UTT',
-                'email_domains' => json_encode(['utt.edu.mx'], JSON_THROW_ON_ERROR),
+                'email_domains' => json_encode(['uttcampus.edu.mx'], JSON_THROW_ON_ERROR),
                 'is_active' => true,
                 'created_at' => $timestamp,
                 'updated_at' => $timestamp,

@@ -60,6 +60,28 @@ class GroupReviewTest extends TestCase
         );
     }
 
+    public function test_status_all_lists_every_group_in_scope_newest_first(): void
+    {
+        $pending = Group::factory()->createdBy($this->student)->create(['created_at' => now()->subDays(3)]);
+        $approved = Group::factory()->approved()->create(['university_id' => $this->utt->id, 'created_at' => now()->subDays(2)]);
+        $rejected = Group::factory()->rejected()->create(['university_id' => $this->utt->id, 'created_at' => now()->subDay()]);
+        $foreign = Group::factory()->create(['university_id' => $this->uadec->id, 'created_at' => now()]);
+        Sanctum::actingAs($this->moderator);
+
+        $this->assertSame(
+            [$rejected->id, $approved->id, $pending->id],
+            $this->getJson('/api/admin/groups?status=all')->assertOk()->json('data.*.id'),
+        );
+
+        Sanctum::actingAs($this->admin);
+        $this->assertSame(
+            [$foreign->id, $rejected->id, $approved->id, $pending->id],
+            $this->getJson('/api/admin/groups?status=all')->json('data.*.id'),
+        );
+
+        $this->getJson('/api/admin/groups?status=todos')->assertUnprocessable()->assertJsonValidationErrors('status');
+    }
+
     public function test_a_moderator_approves_a_group_logs_it_and_tells_the_creator(): void
     {
         Notification::fake();

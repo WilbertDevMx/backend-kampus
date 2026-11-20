@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,6 +10,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Tarjeta de un perfil en el descubrimiento (RF-05).
  *
  * Solo lleva lo que se muestra: ni correo, ni fecha de nacimiento (va la edad), ni zona (RNF-03).
+ *
+ * @mixin User
  */
 class DiscoveryCardResource extends JsonResource
 {

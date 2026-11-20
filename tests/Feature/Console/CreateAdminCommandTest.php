@@ -19,17 +19,17 @@ class CreateAdminCommandTest extends TestCase
     {
         parent::setUp();
 
-        University::factory()->create(['short_name' => 'UTT', 'email_domains' => ['utt.edu.mx']]);
+        University::factory()->create(['short_name' => 'UTT', 'email_domains' => ['uttcampus.edu.mx']]);
     }
 
     public function test_creates_a_verified_admin_without_university(): void
     {
-        $this->artisan('kampus:create-admin', ['--name' => 'Ana Admin', '--email' => '  Ana.Admin@UTT.edu.mx '])
+        $this->artisan('kampus:create-admin', ['--name' => 'Ana Admin', '--email' => '  Ana.Admin@UTTcampus.edu.mx '])
             ->expectsQuestion('Contraseña', self::PASSWORD)
             ->expectsQuestion('Confirma la contraseña', self::PASSWORD)
             ->assertSuccessful();
 
-        $admin = User::where('email', 'ana.admin@utt.edu.mx')->firstOrFail();
+        $admin = User::where('email', 'ana.admin@uttcampus.edu.mx')->firstOrFail();
 
         $this->assertSame(UserRole::Admin, $admin->role);
         $this->assertNull($admin->university_id);
@@ -41,12 +41,12 @@ class CreateAdminCommandTest extends TestCase
     {
         $this->artisan('kampus:create-admin')
             ->expectsQuestion('Nombre', 'Ana Admin')
-            ->expectsQuestion('Correo institucional', 'ana@utt.edu.mx')
+            ->expectsQuestion('Correo institucional', 'ana@uttcampus.edu.mx')
             ->expectsQuestion('Contraseña', self::PASSWORD)
             ->expectsQuestion('Confirma la contraseña', self::PASSWORD)
             ->assertSuccessful();
 
-        $this->assertDatabaseHas('users', ['email' => 'ana@utt.edu.mx', 'role' => 'admin']);
+        $this->assertDatabaseHas('users', ['email' => 'ana@uttcampus.edu.mx', 'role' => 'admin']);
     }
 
     public function test_rejects_an_email_outside_the_participating_institutions(): void
@@ -62,7 +62,7 @@ class CreateAdminCommandTest extends TestCase
 
     public function test_rejects_a_weak_password(): void
     {
-        $this->artisan('kampus:create-admin', ['--name' => 'Ana', '--email' => 'ana@utt.edu.mx'])
+        $this->artisan('kampus:create-admin', ['--name' => 'Ana', '--email' => 'ana@uttcampus.edu.mx'])
             ->expectsQuestion('Contraseña', 'password')
             ->expectsQuestion('Confirma la contraseña', 'password')
             ->assertFailed();
@@ -72,7 +72,7 @@ class CreateAdminCommandTest extends TestCase
 
     public function test_rejects_a_password_confirmation_that_does_not_match(): void
     {
-        $this->artisan('kampus:create-admin', ['--name' => 'Ana', '--email' => 'ana@utt.edu.mx'])
+        $this->artisan('kampus:create-admin', ['--name' => 'Ana', '--email' => 'ana@uttcampus.edu.mx'])
             ->expectsQuestion('Contraseña', self::PASSWORD)
             ->expectsQuestion('Confirma la contraseña', 'Otra2026distinta')
             ->assertFailed();
@@ -82,13 +82,13 @@ class CreateAdminCommandTest extends TestCase
 
     public function test_rejects_an_email_that_already_has_an_account(): void
     {
-        User::factory()->create(['email' => 'ana@utt.edu.mx']);
+        User::factory()->create(['email' => 'ana@uttcampus.edu.mx']);
 
-        $this->artisan('kampus:create-admin', ['--name' => 'Ana', '--email' => 'ana@utt.edu.mx'])
+        $this->artisan('kampus:create-admin', ['--name' => 'Ana', '--email' => 'ana@uttcampus.edu.mx'])
             ->expectsQuestion('Contraseña', self::PASSWORD)
             ->expectsQuestion('Confirma la contraseña', self::PASSWORD)
             ->assertFailed();
 
-        $this->assertSame(UserRole::Student, User::where('email', 'ana@utt.edu.mx')->first()->role);
+        $this->assertSame(UserRole::Student, User::where('email', 'ana@uttcampus.edu.mx')->first()->role);
     }
 }

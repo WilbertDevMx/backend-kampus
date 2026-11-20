@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Gender;
 use App\Enums\UserRole;
 use App\Models\Interest;
 use App\Models\Photo;
@@ -49,6 +50,26 @@ class DemoSeeder extends Seeder
 
     /** Colonia céntrica de la cuenta para presentar (ZoneSeeder). */
     private const PRESENTER_ZONE = 'Torreón Jardín';
+
+    /**
+     * Ubicación real de cada campus (OpenStreetMap), de donde salen las celdas de "Cerca de ti".
+     * No se usan los centros de ZoneSeeder porque son aproximados.
+     *
+     * @var array<string, array{float, float}>
+     */
+    private const CAMPUS_POINTS = [
+        'UTT' => [25.5300, -103.3212],
+        'UAdeC' => [25.5346, -103.4419],
+        'ITL' => [25.5330, -103.4380],
+    ];
+
+    /**
+     * Punto entre los tres campus para la cuenta para presentar: así quedan dentro de los 10 km de la vista
+     * Cerca casi todos los que tienen "Cerca de ti".
+     *
+     * @var array{float, float}
+     */
+    private const PRESENTER_POINT = [25.5325, -103.4004];
 
     private const SEED = 2026;
 
@@ -234,6 +255,7 @@ class DemoSeeder extends Seeder
             'career' => $this->pick(self::CAREERS[$shortName]),
             'semester' => $this->random->getInt(1, 10),
             'birthdate' => now()->subYears($this->random->getInt(18, 25))->subDays($this->random->getInt(0, 364))->toDateString(),
+            'gender' => $this->genderOf($firstName, $presenter),
             'bio' => $this->pick(self::BIOS),
             'zone_id' => $zone?->getKey(),
             'nearby_enabled' => $nearby,
@@ -251,13 +273,19 @@ class DemoSeeder extends Seeder
             Photo::query()->create(['profile_id' => $profile->getKey(), 'path' => $path, 'position' => $position]);
         }
 
-        // "Cerca de ti": una celda de ~1 km a menos de ~1.5 km del centro de su zona, como la mandaría el celular.
-        if ($nearby && $zone !== null) {
+        // Perfil obligatorio (T-49): sin `completed_at` no puede descubrir ni sale en Descubrir.
+        $profile->syncCompletion();
+
+        // "Cerca de ti": una celda de ~1 km a menos de ~1.5 km de su campus real, como la mandaría el celular.
+        // La vista Cerca ya no usa la zona declarada, sino esta celda.
+        if ($nearby) {
+            [$lat, $lng] = $presenter ? self::PRESENTER_POINT : self::CAMPUS_POINTS[$shortName];
+
             UserLocation::query()->create([
                 'user_id' => $user->getKey(),
                 'geohash' => Geohash::encode(
-                    $zone->center_lat + $this->random->getInt(-130, 130) / 10000,
-                    $zone->center_lng + $this->random->getInt(-130, 130) / 10000,
+                    $lat + $this->random->getInt(-130, 130) / 10000,
+                    $lng + $this->random->getInt(-130, 130) / 10000,
                     6,
                 ),
             ]);
@@ -295,6 +323,19 @@ class DemoSeeder extends Seeder
         Swipe::query()->create(['swiper_id' => $a->getKey(), 'swiped_id' => $b->getKey(), 'liked' => true]);
         Swipe::query()->create(['swiper_id' => $b->getKey(), 'swiped_id' => $a->getKey(), 'liked' => true]);
         UserMatch::query()->create(UserMatch::pairOf($a, $b));
+    }
+
+    /**
+     * Género según el nombre: los primeros 20 de FIRST_NAMES son de mujer. No usa el generador aleatorio
+     * para no cambiar la secuencia de los demás datos.
+     */
+    private function genderOf(string $firstName, bool $presenter): Gender
+    {
+        if ($presenter) {
+            return Gender::PrefieroNoDecir;
+        }
+
+        return array_search($firstName, self::FIRST_NAMES, true) < 20 ? Gender::Mujer : Gender::Hombre;
     }
 
     /**

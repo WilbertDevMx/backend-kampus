@@ -20,7 +20,7 @@ class CatalogSeederTest extends TestCase
         $this->assertDatabaseCount('interests', $interestCount);
         $this->assertDatabaseHas('universities', [
             'short_name' => 'UTT',
-            'email_domains' => '["utt.edu.mx"]',
+            'email_domains' => '["uttcampus.edu.mx"]',
         ]);
     }
 }

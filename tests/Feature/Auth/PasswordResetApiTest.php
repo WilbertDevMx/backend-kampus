@@ -25,9 +25,9 @@ class PasswordResetApiTest extends TestCase
     {
         Notification::fake();
         config(['auth.password_reset_url' => 'https://app.kampus.test/auth/reset-password']);
-        $user = User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        $user = User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
-        $this->postJson('/api/forgot-password', ['email' => '  Alumno@UTT.edu.mx '])
+        $this->postJson('/api/forgot-password', ['email' => '  Alumno@UTTcampus.edu.mx '])
             ->assertOk()
             ->assertExactJson(['message' => self::GENERIC_MESSAGE]);
 
@@ -38,7 +38,7 @@ class PasswordResetApiTest extends TestCase
                 && $mail->subject === 'Restablece tu contraseña de Kampus'
                 && $mail->actionText === 'Restablecer contraseña'
                 && str_starts_with($mail->actionUrl, 'https://app.kampus.test/auth/reset-password?token=')
-                && str_contains($mail->actionUrl, 'email=alumno%40utt.edu.mx')
+                && str_contains($mail->actionUrl, 'email=alumno%40uttcampus.edu.mx')
                 && Password::tokenExists($user, $notification->token);
         });
     }
@@ -47,7 +47,7 @@ class PasswordResetApiTest extends TestCase
     {
         Notification::fake();
 
-        $this->postJson('/api/forgot-password', ['email' => 'nadie@utt.edu.mx'])
+        $this->postJson('/api/forgot-password', ['email' => 'nadie@uttcampus.edu.mx'])
             ->assertOk()
             ->assertExactJson(['message' => self::GENERIC_MESSAGE]);
 
@@ -59,10 +59,10 @@ class PasswordResetApiTest extends TestCase
         Notification::fake();
 
         foreach (range(1, 6) as $attempt) {
-            $this->postJson('/api/forgot-password', ['email' => "nadie{$attempt}@utt.edu.mx"])->assertOk();
+            $this->postJson('/api/forgot-password', ['email' => "nadie{$attempt}@uttcampus.edu.mx"])->assertOk();
         }
 
-        $this->postJson('/api/forgot-password', ['email' => 'nadie7@utt.edu.mx'])->assertTooManyRequests();
+        $this->postJson('/api/forgot-password', ['email' => 'nadie7@uttcampus.edu.mx'])->assertTooManyRequests();
     }
 
     public function test_the_email_is_required_and_must_be_valid(): void
@@ -74,14 +74,14 @@ class PasswordResetApiTest extends TestCase
     public function test_a_valid_token_resets_the_password_and_closes_every_session(): void
     {
         Event::fake([PasswordReset::class]);
-        $user = User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        $user = User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
         $user->createToken('iphone');
         $user->createToken('laptop');
         $token = Password::createToken($user);
 
         $this->postJson('/api/reset-password', [
             'token' => $token,
-            'email' => 'ALUMNO@utt.edu.mx',
+            'email' => 'ALUMNO@uttcampus.edu.mx',
             'password' => self::NEW_PASSWORD,
             'password_confirmation' => self::NEW_PASSWORD,
         ])
@@ -93,15 +93,15 @@ class PasswordResetApiTest extends TestCase
         $this->assertSame(0, $user->tokens()->count());
         Event::assertDispatched(PasswordReset::class, fn (PasswordReset $event) => $event->user->is($user));
 
-        $this->postJson('/api/login', ['email' => 'alumno@utt.edu.mx', 'password' => 'password'])
+        $this->postJson('/api/login', ['email' => 'alumno@uttcampus.edu.mx', 'password' => 'password'])
             ->assertUnprocessable();
-        $this->postJson('/api/login', ['email' => 'alumno@utt.edu.mx', 'password' => self::NEW_PASSWORD])
+        $this->postJson('/api/login', ['email' => 'alumno@uttcampus.edu.mx', 'password' => self::NEW_PASSWORD])
             ->assertCreated();
     }
 
     public function test_a_token_works_only_once(): void
     {
-        $user = User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        $user = User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
         $payload = $this->resetPayload(Password::createToken($user));
 
         $this->postJson('/api/reset-password', $payload)->assertOk();
@@ -113,13 +113,13 @@ class PasswordResetApiTest extends TestCase
 
     public function test_an_invalid_or_expired_token_and_an_unknown_email_get_the_same_error(): void
     {
-        $user = User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        $user = User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
         $token = Password::createToken($user);
         $message = 'El enlace para restablecer la contraseña no es válido o ya venció.';
 
         $this->postJson('/api/reset-password', $this->resetPayload('token-falso'))
             ->assertInvalid(['email' => $message]);
-        $this->postJson('/api/reset-password', [...$this->resetPayload($token), 'email' => 'otro@utt.edu.mx'])
+        $this->postJson('/api/reset-password', [...$this->resetPayload($token), 'email' => 'otro@uttcampus.edu.mx'])
             ->assertInvalid(['email' => $message]);
 
         $this->travel(61)->minutes();
@@ -131,7 +131,7 @@ class PasswordResetApiTest extends TestCase
 
     public function test_the_new_password_must_follow_the_policy(): void
     {
-        $user = User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        $user = User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
         $token = Password::createToken($user);
 
         $this->postJson('/api/reset-password', [
@@ -143,7 +143,7 @@ class PasswordResetApiTest extends TestCase
             ...$this->resetPayload($token),
             'password_confirmation' => 'Distinta2026',
         ])->assertInvalid(['password']);
-        $this->postJson('/api/reset-password', ['email' => 'alumno@utt.edu.mx'])
+        $this->postJson('/api/reset-password', ['email' => 'alumno@uttcampus.edu.mx'])
             ->assertInvalid(['token', 'password']);
 
         $this->assertTrue(Password::tokenExists($user, $token));
@@ -157,7 +157,7 @@ class PasswordResetApiTest extends TestCase
     {
         return [
             'token' => $token,
-            'email' => 'alumno@utt.edu.mx',
+            'email' => 'alumno@uttcampus.edu.mx',
             'password' => self::NEW_PASSWORD,
             'password_confirmation' => self::NEW_PASSWORD,
         ];

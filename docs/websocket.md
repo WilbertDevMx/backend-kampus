@@ -72,8 +72,27 @@ Define `VITE_REVERB_APP_KEY`, `VITE_REVERB_HOST`, `VITE_REVERB_PORT`, `VITE_REVE
 expongas el secreto de Reverb en variables `VITE_`.
 
 Los nombres para suscribirse son, por ejemplo, `Echo.private('chat.42')` y `Echo.private('user.7')`.
-Los eventos que se escuchan se definen en sus respectivas tareas; T-13 solo configura el servidor y la
-autorización.
+Al enviar un mensaje por la API (texto con T-14, imagen con T-15), el backend publica `message.sent` en
+`chat.{matchId}`. El payload contiene `message` con lo mismo que responde la API: `id`, `match_id`,
+`sender_id`, `type` (`text` o `image`), `body`, `image_url`, `read_at` y `created_at`. En las imágenes,
+`image_url` es una URL firmada que vence a los 15 minutos; para verla después, la app vuelve a pedir el
+historial. En los mensajes de texto es `null`.
+Con `broadcastAs`, Echo escucha el evento con punto inicial:
+
+```js
+Echo.private(`chat.${matchId}`).listen('.message.sent', ({ message }) => {
+    // Agrega el mensaje recibido a la conversación.
+});
+```
+
+Los eventos de match y de mensaje se entregan en los canales privados autorizados por el backend.
+
+La videollamada (T-19) y la llamada de voz (T-20) avisan por el canal propio `user.{userId}` de la otra persona:
+
+- `call.started`: llamada entrante, con `call.match_id`, `call.type` (`video` o `audio`, según lo que se mandó en
+  `POST /api/matches/{matchId}/call`; `video` si no se mandó) y `call.caller` (id, nombre, universidad y foto). No
+  trae el token: para contestar, la app pide el suyo con `POST /api/matches/{matchId}/call/token`.
+- `call.ended`: la otra persona colgó o rechazó, con `call.match_id` y `call.ended_by`.
 
 ## Prueba manual
 
@@ -91,5 +110,5 @@ autorización.
    `POST /api/broadcasting/auth`.
 4. Repite con el ID de otro usuario o de un match al que la cuenta no pertenezca; la autorización debe
    devolver `403`. Un usuario sin token debe recibir `401`; uno sin verificar, `403`.
-5. T-13 no crea eventos de chat. Cuando una tarea posterior implemente un evento broadcastable, emítelo
-   desde el backend y comprueba que Echo lo recibe únicamente en el canal autorizado.
+5. Envía un mensaje de texto a un match autorizado y comprueba que Echo recibe `message.sent` con sus
+   datos en `chat.{matchId}`. Una cuenta que no pertenezca a ese match no debe poder suscribirse al canal.

@@ -23,7 +23,7 @@ class UserPolicyTest extends TestCase
     {
         parent::setUp();
 
-        $this->utt = University::factory()->create(['short_name' => 'UTT', 'email_domains' => ['utt.edu.mx']]);
+        $this->utt = University::factory()->create(['short_name' => 'UTT', 'email_domains' => ['uttcampus.edu.mx']]);
         $this->uadec = University::factory()->create(['short_name' => 'UAdeC', 'email_domains' => ['uadec.edu.mx']]);
     }
 

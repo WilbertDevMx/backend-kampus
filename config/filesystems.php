@@ -20,6 +20,9 @@ return [
     // Imágenes de los grupos (T-17): también en el bucket privado, con URL firmada.
     'group_images_disk' => env('GROUP_IMAGES_DISK', 's3'),
 
+    // Imágenes del chat (T-15): bucket privado y URL firmada, solo para los dos del match.
+    'chat_images_disk' => env('CHAT_IMAGES_DISK', 's3'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks

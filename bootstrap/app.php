@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\SecurityHeaders;
+use App\Support\Database\DatabaseErrorResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -29,10 +31,22 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
 
         // Acceso por rol (T-40): `role:student` en rutas sociales y `role:moderator,admin` en el panel.
-        $middleware->alias(['role' => EnsureUserHasRole::class]);
+        $middleware->alias([
+            'role' => EnsureUserHasRole::class,
+            // Perfil obligatorio (T-49): descubrir y swipe solo con el perfil completo.
+            'profile.complete' => EnsureProfileIsComplete::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Errores de base de datos (T-52): sin host, puerto ni SQL en la respuesta, aunque APP_DEBUG esté activo.
+        // QueryException extiende PDOException, así que esto cubre ambas.
+        $exceptions->render(function (PDOException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return app(DatabaseErrorResponse::class)->render($e);
+            }
+        });
     })->create();

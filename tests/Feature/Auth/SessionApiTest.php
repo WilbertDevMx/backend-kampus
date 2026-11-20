@@ -25,7 +25,7 @@ class SessionApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->student = User::factory()->student(University::factory()->create())->create(['email' => 'ana@utt.edu.mx']);
+        $this->student = User::factory()->student(University::factory()->create())->create(['email' => 'ana@uttcampus.edu.mx']);
     }
 
     public function test_login_saves_the_device_and_the_list_shows_the_current_session_first(): void
@@ -114,7 +114,7 @@ class SessionApiTest extends TestCase
 
     public function test_staff_can_manage_their_sessions_too(): void
     {
-        $admin = User::factory()->admin()->create(['email' => 'admin@utt.edu.mx']);
+        $admin = User::factory()->admin()->create(['email' => 'admin@uttcampus.edu.mx']);
         $token = $admin->createToken('panel')->plainTextToken;
 
         $this->as($token)->getJson('/api/sessions')->assertOk()->assertJsonCount(1, 'data');
@@ -132,7 +132,7 @@ class SessionApiTest extends TestCase
 
         return $this->withHeader('User-Agent', $userAgent)
             ->postJson('/api/login', array_filter([
-                'email' => 'ana@utt.edu.mx',
+                'email' => 'ana@uttcampus.edu.mx',
                 'password' => 'password',
                 'device_name' => $deviceName,
             ]))

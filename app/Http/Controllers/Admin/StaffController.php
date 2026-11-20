@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\UpdateStaffRequest;
 use App\Http\Resources\StaffResource;
 use App\Models\ModerationAction;
 use App\Models\User;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -22,6 +23,7 @@ use Illuminate\Validation\ValidationException;
  * Las cuentas se desactivan, no se borran, para conservar la bitácora `moderation_actions`, que guarda
  * cada alta, desactivación y reactivación con su motivo.
  */
+#[Group('Administración', 'Gestión de staff y revisión de grupos para moderadores y administradores (T-41, T-42).', weight: 12)]
 class StaffController extends Controller
 {
     public function index(): AnonymousResourceCollection

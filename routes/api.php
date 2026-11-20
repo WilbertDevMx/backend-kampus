@@ -16,6 +16,7 @@ use App\Http\Controllers\Groups\GroupController;
 use App\Http\Controllers\Groups\GroupImageController;
 use App\Http\Controllers\Groups\GroupMembershipController;
 use App\Http\Controllers\MatchController;
+use App\Http\Controllers\Messages\MessageController;
 use App\Http\Controllers\NearbyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileInterestController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\UserLocationController;
+use App\Http\Controllers\VideoCallController;
 use App\Http\Controllers\ZoneController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -107,17 +109,37 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::delete('/location/nearby', [UserLocationController::class, 'disableNearby'])->name('location.nearby.disable');
 
         // Descubrimiento, filtros y swipe (T-09, RF-05 y RF-06).
-        Route::get('/discover', [DiscoveryController::class, 'index'])->name('discover.index');
+        Route::get('/discover', [DiscoveryController::class, 'index'])->middleware('profile.complete')->name('discover.index');
         Route::get('/discover/filters', [DiscoveryFilterController::class, 'show'])->name('discover.filters.show');
         Route::put('/discover/filters', [DiscoveryFilterController::class, 'update'])->name('discover.filters.update');
-        // Vista "Cerca" (T-35, RF-19): quién está cerca, en el centro de su zona y a qué distancia aproximada.
+        // Vista "Cerca" (T-35, RF-19): quién está cerca, alrededor de su última celda y a qué distancia aproximada.
         Route::get('/discover/nearby', [NearbyController::class, 'index'])
-            ->middleware('throttle:30,1')
+            ->middleware(['profile.complete', 'throttle:30,1'])
             ->name('discover.nearby');
-        Route::post('/swipes', [SwipeController::class, 'store'])->name('swipes.store');
+        Route::post('/swipes', [SwipeController::class, 'store'])->middleware('profile.complete')->name('swipes.store');
 
         // Matches (T-10, RF-07).
         Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
+        Route::prefix('matches/{match}')
+            ->whereNumber('match')
+            ->name('matches.messages.')
+            ->group(function () {
+                Route::get('/messages', [MessageController::class, 'index'])->name('index');
+                Route::post('/messages', [MessageController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('store');
+                Route::patch('/messages/read', [MessageController::class, 'markRead'])->name('read');
+            });
+
+        // Videollamada 1 a 1 con LiveKit (T-19, RF-10).
+        Route::prefix('matches/{match}/call')
+            ->whereNumber('match')
+            ->name('matches.call.')
+            ->group(function () {
+                Route::post('/', [VideoCallController::class, 'start'])->middleware('throttle:10,1')->name('start');
+                Route::post('/token', [VideoCallController::class, 'token'])->middleware('throttle:20,1')->name('token');
+                Route::delete('/', [VideoCallController::class, 'end'])->middleware('throttle:20,1')->name('end');
+            });
 
         // Bloqueo y reporte de usuarios (T-21, RF-13 y RF-14).
         Route::get('/blocks', [BlockController::class, 'index'])->name('blocks.index');

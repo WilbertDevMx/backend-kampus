@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ProfileResource;
 use App\Models\Interest;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+#[Group('Perfil', weight: 4)]
 class ProfileInterestController extends Controller
 {
     public function index(): JsonResponse
@@ -25,6 +27,7 @@ class ProfileInterestController extends Controller
 
         $profile = $request->user()->profile()->firstOrCreate([]);
         $profile->interests()->sync($validated['interest_ids']);
+        $profile->syncCompletion();
 
         return new ProfileResource($request->user()->load(['profile.interests', 'profile.photos']));
     }

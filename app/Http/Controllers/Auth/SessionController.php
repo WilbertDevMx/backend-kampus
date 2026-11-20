@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SessionResource;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Log;
  * cierra una de otro dispositivo o todas las demás. Todas las consultas parten de `$user->tokens()`, así
  * que nadie puede ver ni cerrar una sesión ajena: una que no es suya responde 404, igual que una que no existe.
  */
+#[Group('Sesiones', 'Sesiones activas en otros dispositivos y cómo cerrarlas (T-46).', weight: 2)]
 class SessionController extends Controller
 {
     /**

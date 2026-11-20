@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\User;
 use App\Support\Security\MasksEmail;
 use App\Support\Security\TwoFactor;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,7 @@ use Illuminate\Validation\ValidationException;
  * El enlace es de un solo uso y vence a los 60 minutos (`config/auth.php`). La respuesta es la misma
  * exista o no el correo, para no revelar qué cuentas están registradas.
  */
+#[Group('Autenticación', weight: 1)]
 class RecoverPasswordController extends Controller
 {
     /**
@@ -64,6 +66,13 @@ class RecoverPasswordController extends Controller
         }
     }
 
+    /**
+     * Pedir el enlace para restablecer la contraseña.
+     *
+     * Responde lo mismo exista o no la cuenta, para no revelar qué correos están registrados (T-45).
+     *
+     * @unauthenticated
+     */
     public function sendResetLink(ForgotPasswordRequest $request): JsonResponse
     {
         $email = $request->string('email')->toString();
@@ -82,6 +91,14 @@ class RecoverPasswordController extends Controller
         ]);
     }
 
+    /**
+     * Restablecer la contraseña.
+     *
+     * Usa el token del enlace del correo. Si la cuenta tiene la verificación en dos pasos, también pide `code`
+     * o `recovery_code` (T-47).
+     *
+     * @unauthenticated
+     */
     public function reset(ResetPasswordRequest $request, TwoFactor $twoFactor): JsonResponse
     {
         $this->ensureSecondFactor($request, $twoFactor);

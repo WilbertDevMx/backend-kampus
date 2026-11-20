@@ -86,6 +86,7 @@ class SecurityHardeningTest extends TestCase
                     'email_verified_at' => $user->email_verified_at->toIso8601String(),
                     'role' => 'student',
                     'university_id' => null,
+                    'profile_completed' => false,
                 ],
             ]);
     }
@@ -106,21 +107,21 @@ class SecurityHardeningTest extends TestCase
         $logger = Mockery::spy(LoggerInterface::class);
         Log::shouldReceive('channel')->with('security')->andReturn($logger);
 
-        User::factory()->create(['email' => 'alumno@utt.edu.mx']);
+        User::factory()->create(['email' => 'alumno@uttcampus.edu.mx']);
 
         for ($i = 0; $i <= LoginRequest::MAX_ATTEMPTS; $i++) {
-            $this->postJson('/api/login', ['email' => 'alumno@utt.edu.mx', 'password' => 'incorrecta']);
+            $this->postJson('/api/login', ['email' => 'alumno@uttcampus.edu.mx', 'password' => 'incorrecta']);
         }
 
         $logger->shouldHaveReceived('notice')
             ->with('Intento fallido de inicio de sesión.', Mockery::on(
-                fn (array $context) => $context['email'] === 'al****@utt.edu.mx' && $context['ip'] === '127.0.0.1'
+                fn (array $context) => $context['email'] === 'al****@uttcampus.edu.mx' && $context['ip'] === '127.0.0.1'
             ))
             ->times(LoginRequest::MAX_ATTEMPTS);
 
         $logger->shouldHaveReceived('warning')
             ->with('Bloqueo por intentos fallidos de inicio de sesión.', Mockery::on(
-                fn (array $context) => $context['email'] === 'al****@utt.edu.mx'
+                fn (array $context) => $context['email'] === 'al****@uttcampus.edu.mx'
             ))
             ->once();
     }
