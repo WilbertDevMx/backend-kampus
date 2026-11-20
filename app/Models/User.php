@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -102,6 +103,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function university(): BelongsTo
     {
         return $this->belongsTo(University::class);
+    }
+
+    /**
+     * Reportes que otros hicieron contra esta cuenta (RF-14).
+     *
+     * @return HasMany<Report, $this>
+     */
+    public function reportsReceived(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reported_id');
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 
     public function isStaff(): bool
