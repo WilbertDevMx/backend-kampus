@@ -51,6 +51,8 @@ class OpenApiContractTest extends TestCase
         $this->assertSame([
             'GET /email/verify/{id}/{hash}',
             'POST /forgot-password',
+            'POST /forgot-password/sms',
+            'POST /forgot-password/sms/verify',
             'POST /login',
             'POST /login/two-factor',
             'POST /register',

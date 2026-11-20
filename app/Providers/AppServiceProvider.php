@@ -5,6 +5,10 @@ namespace App\Providers;
 use App\Discovery\Ranking\DiscoveryRanking;
 use App\Discovery\Ranking\SharedInterestsRanking;
 use App\Models\User;
+use App\Sms\LogSmsSender;
+use App\Sms\SmsChannel;
+use App\Sms\SmsSender;
+use App\Sms\Vonage\VonageSmsSender;
 use App\Video\LiveKit\LiveKitProvider;
 use App\Video\VideoCallProvider;
 use Dedoc\Scramble\Scramble;
@@ -12,6 +16,7 @@ use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -35,6 +40,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Proveedor de videollamadas (Adapter, T-19): para cambiar de proveedor basta cambiar esta línea.
         $this->app->bind(VideoCallProvider::class, fn (): VideoCallProvider => LiveKitProvider::fromConfig());
+
+        // Proveedor de SMS (Adapter, T-45): `log` en desarrollo y pruebas, `vonage` en el servidor.
+        $this->app->bind(SmsSender::class, fn (): SmsSender => match (config('kampus.sms_driver')) {
+            'vonage' => VonageSmsSender::fromConfig(),
+            default => new LogSmsSender,
+        });
     }
 
     /**
@@ -44,6 +55,9 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configurePasswordRules();
         $this->configureRateLimiting();
+
+        // Canal `sms` de las notificaciones (T-45): lo manda el SmsSender configurado.
+        $this->app->make(ChannelManager::class)->extend('sms', fn ($app): SmsChannel => $app->make(SmsChannel::class));
 
         // En producción todas las URL generadas (verificación de correo, etc.) usan HTTPS (RNF-02).
         if ($this->app->isProduction()) {
