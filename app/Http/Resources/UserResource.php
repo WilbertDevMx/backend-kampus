@@ -23,6 +23,9 @@ class UserResource extends JsonResource
             // Si es `false`, la app manda al estudiante a terminar su perfil antes de usarla (T-49).
             // El staff no tiene perfil social, así que para él siempre es `true`.
             'profile_completed' => $this->role->isStaff() || $this->profile?->completed_at !== null,
+            // Celular verificado para recuperar la contraseña por SMS (T-45). Este recurso solo lo ve la propia cuenta.
+            'phone' => $this->phone,
+            'phone_verified' => $this->hasVerifiedPhone(),
         ];
     }
 }

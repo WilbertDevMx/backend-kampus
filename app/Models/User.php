@@ -23,7 +23,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 // `role` no es asignable en masa a propósito: el registro público nunca puede crear staff (RF-22).
 #[Fillable(['name', 'email', 'password', 'university_id'])]
-#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'phone'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -85,7 +85,18 @@ class User extends Authenticatable implements MustVerifyEmail
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
+            // Celular para recuperar la contraseña por SMS (T-45). No es asignable en masa: solo se guarda
+            // al verificarlo con un código.
+            'phone_verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * El celular solo se guarda ya verificado, pero se revisan los dos campos por claridad (T-45).
+     */
+    public function hasVerifiedPhone(): bool
+    {
+        return $this->phone !== null && $this->phone_verified_at !== null;
     }
 
     /**

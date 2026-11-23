@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ReportReviewController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\UserModerationController;
 use App\Http\Controllers\Auth\AuthTokenController;
+use App\Http\Controllers\Auth\PhoneController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\TwoFactorLoginController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\RecoverPasswordController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SmsPasswordRecoveryController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\UserLocationController;
 use App\Http\Controllers\VideoCallController;
@@ -65,6 +67,15 @@ Route::post('/reset-password', [RecoverPasswordController::class, 'reset'])
     ->middleware('throttle:6,1')
     ->name('password.update');
 
+// Recuperación de contraseña por SMS: código al celular verificado, que se cambia por el token de
+// /reset-password (T-45).
+Route::post('/forgot-password/sms', [SmsPasswordRecoveryController::class, 'send'])
+    ->middleware('throttle:6,1')
+    ->name('password.sms');
+Route::post('/forgot-password/sms/verify', [SmsPasswordRecoveryController::class, 'verify'])
+    ->middleware('throttle:6,1')
+    ->name('password.sms.verify');
+
 // Rutas de usuario: requieren token y correo verificado (RF-01).
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()))->name('user.show');
@@ -78,6 +89,14 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         ->whereNumber('session')
         ->middleware('throttle:30,1')
         ->name('sessions.destroy');
+
+    // Celular para recuperar la contraseña por SMS (T-45): para estudiantes y staff.
+    Route::get('/phone', [PhoneController::class, 'show'])->name('phone.show');
+    Route::middleware('throttle:6,1')->group(function () {
+        Route::post('/phone', [PhoneController::class, 'store'])->name('phone.store');
+        Route::post('/phone/verify', [PhoneController::class, 'verify'])->name('phone.verify');
+        Route::delete('/phone', [PhoneController::class, 'destroy'])->name('phone.destroy');
+    });
 
     // Verificación en dos pasos con app de autenticación (T-47): para estudiantes y staff.
     Route::get('/two-factor', [TwoFactorController::class, 'show'])->name('two-factor.show');
