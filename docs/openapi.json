@@ -16,6 +16,10 @@
             "description": "Registro, verificaci\u00f3n de correo, inicio y cierre de sesi\u00f3n y recuperar la contrase\u00f1a (T-04, T-05, T-45)."
         },
         {
+            "name": "Cuenta",
+            "description": "Aceptar el aviso de privacidad y las normas de comunidad, y eliminar la cuenta (T-23)."
+        },
+        {
             "name": "Sesiones",
             "description": "Sesiones activas en otros dispositivos y c\u00f3mo cerrarlas (T-46)."
         },
@@ -876,6 +880,166 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/legal/accept": {
+            "post": {
+                "operationId": "legal.accept",
+                "description": "Guarda cu\u00e1ndo acept\u00f3 la cuenta el aviso de privacidad (`privacy`) y las normas de comunidad (`rules`)\n(RF-04). Sirve para las cuentas que se registraron antes de que la app los pidiera, o para volver a\naceptarlos si cambian. Se manda al menos uno.",
+                "summary": "Aceptar los documentos legales",
+                "tags": [
+                    "Cuenta"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "privacy": {
+                                        "description": "`accepted` tambi\u00e9n falla si el campo no viene; solo se aplica al documento que se manda.",
+                                        "enum": [
+                                            "yes",
+                                            "on",
+                                            "1",
+                                            1,
+                                            "true",
+                                            true
+                                        ]
+                                    },
+                                    "rules": {
+                                        "enum": [
+                                            "yes",
+                                            "on",
+                                            "1",
+                                            1,
+                                            "true",
+                                            true
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`UserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/user": {
+            "delete": {
+                "operationId": "user.destroy",
+                "description": "Borra la cuenta y todos sus datos de inmediato: perfil, fotos, matches con sus mensajes, bloqueos,\nmembres\u00edas y sesiones (RF-16). Las fotos e im\u00e1genes del bucket se borran por la cola, en minutos. No\nse puede deshacer. Pide la contrase\u00f1a. Las cuentas de staff se dan de baja en la gesti\u00f3n de staff.",
+                "summary": "Eliminar mi cuenta",
+                "tags": [
+                    "Cuenta"
+                ],
+                "parameters": [
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Eliminamos tu cuenta y tus datos."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Las cuentas de staff se dan de baja desde la gesti\u00f3n de staff."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "user.show",
+                "responses": {
+                    "200": {
+                        "description": "`UserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -5642,6 +5806,72 @@
                         "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
+            },
+            "delete": {
+                "operationId": "admin.users.destroy",
+                "summary": "Elimina una cuenta de estudiante con todos sus datos (T-23, RF-16). Mismas reglas que suspender: el\nmoderador debe indicar un reporte sobre esa cuenta (`report_id`) y el motivo es obligatorio. La\neliminaci\u00f3n queda en `moderation_actions` con el id de la cuenta; el reporte se borra con ella, por\neso su id se copia al final del motivo. No se puede deshacer",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 1000
+                        }
+                    },
+                    {
+                        "name": "report_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Eliminamos la cuenta y sus datos."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
             }
         },
         "/admin/users/{user}/suspend": {
@@ -5801,34 +6031,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/user": {
-            "get": {
-                "operationId": "user.show",
-                "responses": {
-                    "200": {
-                        "description": "`UserResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/UserResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -7072,6 +7274,27 @@
                         "type": "string",
                         "description": "Pol\u00edtica del proyecto (AppServiceProvider): m\u00ednimo 8, letras, may\u00fasculas, min\u00fasculas y n\u00fameros."
                     },
+                    "accept_privacy": {
+                        "description": "Aviso de privacidad y normas de comunidad (T-23, RF-04). Por ahora opcionales para no romper la\napp mientras agrega las casillas; si vienen, tienen que estar aceptados y se guarda la fecha.",
+                        "enum": [
+                            "yes",
+                            "on",
+                            "1",
+                            1,
+                            "true",
+                            true
+                        ]
+                    },
+                    "accept_rules": {
+                        "enum": [
+                            "yes",
+                            "on",
+                            "1",
+                            1,
+                            "true",
+                            true
+                        ]
+                    },
                     "password_confirmation": {
                         "type": "string"
                     }
@@ -7551,6 +7774,19 @@
                     },
                     "phone_verified": {
                         "type": "boolean"
+                    },
+                    "privacy_accepted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Cu\u00e1ndo acept\u00f3 el aviso de privacidad y las normas de comunidad (T-23, RF-04). Si son `null`, la\napp le pide aceptarlos con POST /api/legal/accept."
+                    },
+                    "rules_accepted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -7562,7 +7798,9 @@
                     "university_id",
                     "profile_completed",
                     "phone",
-                    "phone_verified"
+                    "phone_verified",
+                    "privacy_accepted_at",
+                    "rules_accepted_at"
                 ],
                 "title": "UserResource"
             },
