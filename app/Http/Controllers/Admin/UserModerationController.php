@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Accounts\AccountDeletion;
 use App\Enums\ModerationActionType;
 use App\Enums\ReportStatus;
 use App\Enums\UserRole;
@@ -13,6 +14,7 @@ use App\Models\User;
 use App\Moderation\AccountSuspension;
 use Dedoc\Scramble\Attributes\Group as ApiGroup;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -21,9 +23,9 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Consulta de usuarios y suspensión de cuentas (T-43, RF-15 y RF-24). El moderador solo ve a los
- * estudiantes de su universidad y solo suspende con un reporte sobre la cuenta (`report_id`); el
- * administrador ve todas las cuentas. Toda suspensión o reactivación lleva motivo y queda en
+ * Consulta de usuarios, suspensión y eliminación de cuentas (T-43 y T-23, RF-15, RF-16 y RF-24). El
+ * moderador solo ve a los estudiantes de su universidad y solo suspende o elimina con un reporte sobre la
+ * cuenta (`report_id`); el administrador ve todas las cuentas. Toda acción lleva motivo y queda en
  * `moderation_actions`. Las cuentas de staff se desactivan en la gestión de staff (T-41).
  */
 #[ApiGroup('Administración', weight: 12)]
@@ -94,19 +96,7 @@ class UserModerationController extends Controller
 
         $this->ensureStudent($target);
 
-        $report = null;
-        if (isset($validated['report_id'])) {
-            $report = Report::query()
-                ->reviewableBy($actor)
-                ->where('reports.reported_id', $target->getKey())
-                ->find($validated['report_id']);
-
-            if ($report === null) {
-                throw ValidationException::withMessages([
-                    'report_id' => 'El reporte no es sobre esta cuenta.',
-                ]);
-            }
-        }
+        $report = isset($validated['report_id']) ? $this->findReportAbout($actor, $target, $validated['report_id']) : null;
 
         DB::transaction(function () use ($actor, $target, $report, $validated, $suspension): void {
             $locked = User::query()->lockForUpdate()->findOrFail($target->getKey());
@@ -166,6 +156,68 @@ class UserModerationController extends Controller
         });
 
         return new AdminUserResource($this->loadDetail($target->refresh()));
+    }
+
+    /**
+     * Elimina una cuenta de estudiante con todos sus datos (T-23, RF-16). Mismas reglas que suspender: el
+     * moderador debe indicar un reporte sobre esa cuenta (`report_id`) y el motivo es obligatorio. La
+     * eliminación queda en `moderation_actions` con el id de la cuenta; el reporte se borra con ella, por
+     * eso su id se copia al final del motivo. No se puede deshacer.
+     */
+    public function destroy(Request $request, int $user, AccountDeletion $deletion): JsonResponse
+    {
+        $actor = $request->user();
+        $target = $this->findManageable($actor, $user);
+        Gate::authorize('moderate', $target);
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:1000'],
+            'report_id' => [Rule::requiredIf($actor->isModerator()), 'nullable', 'integer'],
+        ], [
+            'report_id.required' => 'Indica el reporte que justifica la eliminación.',
+        ]);
+
+        $this->ensureStudent($target);
+
+        $report = isset($validated['report_id']) ? $this->findReportAbout($actor, $target, $validated['report_id']) : null;
+        $reason = $report === null ? $validated['reason'] : $validated['reason'].' (reporte #'.$report->getKey().')';
+
+        DB::transaction(function () use ($actor, $target, $report, $reason, $deletion): void {
+            ModerationAction::recordOnUser(
+                $actor,
+                ModerationActionType::DeleteUser,
+                $target,
+                $reason,
+                $target->university_id,
+                $report?->getKey(),
+            );
+
+            $deletion->delete($target);
+        });
+
+        return response()->json([
+            'message' => 'Eliminamos la cuenta y sus datos.',
+        ]);
+    }
+
+    /**
+     * Reporte que justifica una acción sobre `$target`: tiene que ser sobre esa cuenta y estar al alcance
+     * de `$actor`.
+     */
+    private function findReportAbout(User $actor, User $target, int $reportId): Report
+    {
+        $report = Report::query()
+            ->reviewableBy($actor)
+            ->where('reports.reported_id', $target->getKey())
+            ->find($reportId);
+
+        if ($report === null) {
+            throw ValidationException::withMessages([
+                'report_id' => 'El reporte no es sobre esta cuenta.',
+            ]);
+        }
+
+        return $report;
     }
 
     /**

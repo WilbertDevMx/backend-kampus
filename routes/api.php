@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\GroupReviewController;
 use App\Http\Controllers\Admin\OfficialGroupController;
 use App\Http\Controllers\Admin\ReportReviewController;
@@ -79,6 +80,12 @@ Route::post('/forgot-password/sms/verify', [SmsPasswordRecoveryController::class
 // Rutas de usuario: requieren token y correo verificado (RF-01).
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()))->name('user.show');
+
+    // Aviso de privacidad, normas de comunidad y eliminación de la cuenta (T-23, RF-04 y RF-16).
+    Route::post('/legal/accept', [AccountController::class, 'acceptLegal'])->name('legal.accept');
+    Route::delete('/user', [AccountController::class, 'destroy'])
+        ->middleware('throttle:6,1')
+        ->name('user.destroy');
 
     // Gestión de sesiones (T-46): para estudiantes y staff. Cada quien solo ve y cierra las suyas.
     Route::get('/sessions', [SessionController::class, 'index'])->name('sessions.index');
@@ -233,6 +240,8 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('admin')->name('admin.')
             Route::get('/{user}', [UserModerationController::class, 'show'])->name('show');
             Route::post('/{user}/suspend', [UserModerationController::class, 'suspend'])->name('suspend');
             Route::post('/{user}/reactivate', [UserModerationController::class, 'reactivate'])->name('reactivate');
+            // Eliminación de la cuenta con todos sus datos (T-23, RF-16), con las mismas reglas que suspender.
+            Route::delete('/{user}', [UserModerationController::class, 'destroy'])->name('destroy');
         });
     });
 });

@@ -90,6 +90,9 @@ class SecurityHardeningTest extends TestCase
                     // Celular para recuperar la contraseña (T-45): solo lo ve la propia cuenta.
                     'phone' => null,
                     'phone_verified' => false,
+                    // Aceptación del aviso de privacidad y las normas (T-23).
+                    'privacy_accepted_at' => null,
+                    'rules_accepted_at' => null,
                 ],
             ]);
     }

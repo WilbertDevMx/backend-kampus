@@ -88,6 +88,9 @@ class User extends Authenticatable implements MustVerifyEmail
             // Celular para recuperar la contraseña por SMS (T-45). No es asignable en masa: solo se guarda
             // al verificarlo con un código.
             'phone_verified_at' => 'datetime',
+            // Aceptación del aviso de privacidad y las normas de comunidad (T-23, RF-04).
+            'privacy_accepted_at' => 'datetime',
+            'rules_accepted_at' => 'datetime',
         ];
     }
 
