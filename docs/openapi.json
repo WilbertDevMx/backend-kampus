@@ -4275,7 +4275,7 @@
         "/groups/{group}/members/me": {
             "delete": {
                 "operationId": "groups.members.destroy",
-                "summary": "Salir del grupo. Si se va el \u00faltimo administrador, el integrante m\u00e1s antiguo toma su lugar; el \u00fanico\nintegrante no puede salir, tiene que borrar el grupo",
+                "summary": "Salir del grupo. Si se va el \u00faltimo administrador, el integrante m\u00e1s antiguo toma su lugar. El \u00fanico\nintegrante de un grupo de alumnos no puede salir, tiene que borrarlo; en uno oficial s\u00ed puede, porque el\ngrupo es del staff y el estudiante no lo puede borrar",
                 "tags": [
                     "Grupos"
                 ],
