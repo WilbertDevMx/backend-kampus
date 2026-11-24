@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\Database\DatabaseErrorResponse;
 use Illuminate\Foundation\Application;
@@ -26,6 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Límite general de peticiones de la API (definido en AppServiceProvider).
         $middleware->throttleApi();
+
+        // Global y al principio, antes de auth:sanctum y verified: así una ruta protegida responde 401 o 403 en JSON
+        // aunque el cliente no mande `Accept: application/json`, en lugar de un 500 por la ruta `login` que no existe.
+        $middleware->prepend(ForceJsonResponse::class);
 
         // Global, para que las cabeceras también salgan en respuestas de error (401, 403, 429...).
         $middleware->append(SecurityHeaders::class);
