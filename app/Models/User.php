@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ModerationTarget;
 use App\Enums\UserRole;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -21,7 +23,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 // `role` no es asignable en masa a propósito: el registro público nunca puede crear staff (RF-22).
 #[Fillable(['name', 'email', 'password', 'university_id'])]
-#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'phone'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -83,7 +85,21 @@ class User extends Authenticatable implements MustVerifyEmail
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
+            // Celular para recuperar la contraseña por SMS (T-45). No es asignable en masa: solo se guarda
+            // al verificarlo con un código.
+            'phone_verified_at' => 'datetime',
+            // Aceptación del aviso de privacidad y las normas de comunidad (T-23, RF-04).
+            'privacy_accepted_at' => 'datetime',
+            'rules_accepted_at' => 'datetime',
         ];
+    }
+
+    /**
+     * El celular solo se guarda ya verificado, pero se revisan los dos campos por claridad (T-45).
+     */
+    public function hasVerifiedPhone(): bool
+    {
+        return $this->phone !== null && $this->phone_verified_at !== null;
     }
 
     /**
@@ -102,6 +118,32 @@ class User extends Authenticatable implements MustVerifyEmail
     public function university(): BelongsTo
     {
         return $this->belongsTo(University::class);
+    }
+
+    /**
+     * Reportes que otros hicieron contra esta cuenta (RF-14).
+     *
+     * @return HasMany<Report, $this>
+     */
+    public function reportsReceived(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reported_id');
+    }
+
+    /**
+     * Acciones del staff sobre esta cuenta en la bitácora: suspensiones, reactivaciones, alta de staff...
+     *
+     * @return HasMany<ModerationAction, $this>
+     */
+    public function moderationHistory(): HasMany
+    {
+        return $this->hasMany(ModerationAction::class, 'target_id')
+            ->where('moderation_actions.target_type', ModerationTarget::User);
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 
     public function isStaff(): bool

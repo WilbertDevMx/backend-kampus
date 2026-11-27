@@ -95,6 +95,22 @@ class GroupMembershipTest extends TestCase
         $this->assertDatabaseHas('group_members', ['group_id' => $group->id, 'user_id' => $ana->id]);
     }
 
+    public function test_the_only_member_of_an_official_group_can_leave_it(): void
+    {
+        // Grupo oficial creado por el staff sin estudiante administrador: quien se une es el único integrante
+        // y, como no lo puede borrar, tiene que poder salir.
+        $staff = User::factory()->admin()->create();
+        $group = Group::factory()->official()->create(['created_by' => $staff->id]);
+        $luis = User::factory()->student($this->utt)->create();
+        $group->members()->attach($luis->id, ['role' => 'member']);
+        Sanctum::actingAs($luis);
+
+        $this->deleteJson("/api/groups/{$group->id}/members/me")->assertNoContent();
+
+        $this->assertDatabaseMissing('group_members', ['group_id' => $group->id, 'user_id' => $luis->id]);
+        $this->assertDatabaseHas('groups', ['id' => $group->id, 'is_official' => true]);
+    }
+
     public function test_only_members_see_the_member_list_admins_first(): void
     {
         $ana = User::factory()->student($this->utt)->create(['name' => 'Ana']);

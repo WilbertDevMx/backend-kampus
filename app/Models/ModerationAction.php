@@ -61,6 +61,22 @@ class ModerationAction extends Model
         ]);
     }
 
+    /**
+     * Registra la revisión de un reporte (T-37), en el ámbito de la universidad del reportado.
+     */
+    public static function recordOnReport(User $actor, ModerationActionType $action, Report $report, string $reason): self
+    {
+        return static::create([
+            'actor_id' => $actor->getKey(),
+            'action' => $action,
+            'target_type' => ModerationTarget::Report,
+            'target_id' => $report->getKey(),
+            'report_id' => $report->getKey(),
+            'university_id' => $report->university_id,
+            'reason' => $reason,
+        ]);
+    }
+
     protected function casts(): array
     {
         return [

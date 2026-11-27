@@ -58,8 +58,9 @@ class GroupMembershipController extends Controller
     }
 
     /**
-     * Salir del grupo. Si se va el último administrador, el integrante más antiguo toma su lugar; el único
-     * integrante no puede salir, tiene que borrar el grupo.
+     * Salir del grupo. Si se va el último administrador, el integrante más antiguo toma su lugar. El único
+     * integrante de un grupo de alumnos no puede salir, tiene que borrarlo; en uno oficial sí puede, porque el
+     * grupo es del staff y el estudiante no lo puede borrar.
      */
     public function destroy(Request $request, Group $group): Response
     {
@@ -75,7 +76,8 @@ class GroupMembershipController extends Controller
 
         $others = fn () => $group->members()->whereKeyNot($user->getKey());
 
-        if (! $others()->exists()) {
+        // Un grupo oficial puede quedarse sin integrantes: lo creó el staff y sigue publicado para unirse.
+        if (! $others()->exists() && ! $group->is_official) {
             throw ValidationException::withMessages([
                 'group' => 'Eres el único integrante. Si ya no quieres el grupo, bórralo.',
             ]);

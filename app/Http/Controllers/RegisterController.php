@@ -28,6 +28,12 @@ class RegisterController extends Controller
             'university_id' => $request->universityId(),
         ]);
 
+        // Fecha de aceptación del aviso de privacidad y las normas (T-23, RF-04), si la app las mandó.
+        $user->forceFill(array_filter([
+            'privacy_accepted_at' => $request->has('accept_privacy') ? now() : null,
+            'rules_accepted_at' => $request->has('accept_rules') ? now() : null,
+        ]))->save();
+
         event(new Registered($user));
 
         return response()->json([

@@ -31,4 +31,17 @@ return [
 
     'api_docs_enabled' => (bool) env('API_DOCS_ENABLED', env('APP_ENV', 'production') !== 'production'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | SMS (T-45)
+    |--------------------------------------------------------------------------
+    |
+    | Proveedor de los SMS con códigos (verificar el celular y recuperar la contraseña). `log` los escribe
+    | en el log sin mandarlos, para desarrollo y pruebas; `vonage` los manda con Vonage (llaves en
+    | config/services.php). En producción va `vonage`: con `log` los códigos quedarían en el log.
+    |
+    */
+
+    'sms_driver' => env('SMS_DRIVER', 'log'),
+
 ];

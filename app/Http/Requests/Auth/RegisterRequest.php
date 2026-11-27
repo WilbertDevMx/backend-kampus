@@ -39,6 +39,21 @@ class RegisterRequest extends FormRequest
             'email' => ['bail', 'required', 'string', 'email', 'max:255', 'unique:users,email', $this->allowedDomain(...)],
             // Política del proyecto (AppServiceProvider): mínimo 8, letras, mayúsculas, minúsculas y números.
             'password' => ['required', 'confirmed', Password::defaults()],
+            // Aviso de privacidad y normas de comunidad (T-23, RF-04). Por ahora opcionales para no romper la
+            // app mientras agrega las casillas; si vienen, tienen que estar aceptados y se guarda la fecha.
+            'accept_privacy' => ['sometimes', 'accepted'],
+            'accept_rules' => ['sometimes', 'accepted'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'accept_privacy.accepted' => 'Debes aceptar el aviso de privacidad.',
+            'accept_rules.accepted' => 'Debes aceptar las normas de comunidad.',
         ];
     }
 

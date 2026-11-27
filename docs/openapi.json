@@ -16,6 +16,10 @@
             "description": "Registro, verificaci\u00f3n de correo, inicio y cierre de sesi\u00f3n y recuperar la contrase\u00f1a (T-04, T-05, T-45)."
         },
         {
+            "name": "Cuenta",
+            "description": "Aceptar el aviso de privacidad y las normas de comunidad, y eliminar la cuenta (T-23)."
+        },
+        {
             "name": "Sesiones",
             "description": "Sesiones activas en otros dispositivos y c\u00f3mo cerrarlas (T-46)."
         },
@@ -107,6 +111,25 @@
                                     "required": [
                                         "message",
                                         "user"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -389,6 +412,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -451,6 +493,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -496,11 +557,681 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
                 },
                 "security": []
+            }
+        },
+        "/forgot-password/sms": {
+            "post": {
+                "operationId": "password.sms",
+                "description": "Responde lo mismo exista o no la cuenta y tenga o no celular verificado.",
+                "summary": "Pedir un c\u00f3digo por SMS para restablecer la contrase\u00f1a",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Si la cuenta tiene un celular verificado, te enviamos un c\u00f3digo por SMS. Vence en 10 minutos."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/forgot-password/sms/verify": {
+            "post": {
+                "operationId": "password.sms.verify",
+                "description": "Con el token se llama a `POST /api/reset-password`, como con el enlace del correo. El c\u00f3digo es de un\nsolo uso y se invalida tras 5 intentos fallidos.",
+                "summary": "Cambiar el c\u00f3digo del SMS por el token para restablecer la contrase\u00f1a",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/ForgotPasswordRequest"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "code"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "C\u00f3digo correcto. Ahora elige tu nueva contrase\u00f1a."
+                                        },
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "two_factor_required": {
+                                            "type": "boolean",
+                                            "description": "Si es `true`, `POST /reset-password` tambi\u00e9n pide `code` o `recovery_code` de la app (T-47)."
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "token",
+                                        "email",
+                                        "two_factor_required"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/phone": {
+            "get": {
+                "operationId": "phone.show",
+                "summary": "Celular registrado y si est\u00e1 verificado",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "verified": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "phone",
+                                                "verified"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "phone.store",
+                "summary": "Pide un c\u00f3digo para agregar o cambiar el celular. El n\u00famero no se guarda hasta confirmarlo",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "phone": {
+                                        "type": "string",
+                                        "maxLength": 25
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "phone",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "const": 600
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "expires_in"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Ya te enviamos un c\u00f3digo hace poco. Espera un momento antes de pedir otro."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Error overview."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "phone.destroy",
+                "summary": "Quita el celular. La contrase\u00f1a ya no se podr\u00e1 recuperar por SMS",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Quitamos tu celular."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "verified": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "phone",
+                                                "verified"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/phone/verify": {
+            "post": {
+                "operationId": "phone.verify",
+                "summary": "Confirma el celular con el c\u00f3digo del SMS y lo guarda como verificado",
+                "tags": [
+                    "Autenticaci\u00f3n"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "code"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Tu celular qued\u00f3 verificado. Ya puedes recuperar tu contrase\u00f1a por SMS."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "verified": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "phone",
+                                                "verified"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/legal/accept": {
+            "post": {
+                "operationId": "legal.accept",
+                "description": "Guarda cu\u00e1ndo acept\u00f3 la cuenta el aviso de privacidad (`privacy`) y las normas de comunidad (`rules`)\n(RF-04). Sirve para las cuentas que se registraron antes de que la app los pidiera, o para volver a\naceptarlos si cambian. Se manda al menos uno.",
+                "summary": "Aceptar los documentos legales",
+                "tags": [
+                    "Cuenta"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "privacy": {
+                                        "description": "`accepted` tambi\u00e9n falla si el campo no viene; solo se aplica al documento que se manda.",
+                                        "enum": [
+                                            "yes",
+                                            "on",
+                                            "1",
+                                            1,
+                                            "true",
+                                            true
+                                        ]
+                                    },
+                                    "rules": {
+                                        "enum": [
+                                            "yes",
+                                            "on",
+                                            "1",
+                                            1,
+                                            "true",
+                                            true
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`UserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/user": {
+            "delete": {
+                "operationId": "user.destroy",
+                "description": "Borra la cuenta y todos sus datos de inmediato: perfil, fotos, matches con sus mensajes, bloqueos,\nmembres\u00edas y sesiones (RF-16). Las fotos e im\u00e1genes del bucket se borran por la cola, en minutos. No\nse puede deshacer. Pide la contrase\u00f1a. Las cuentas de staff se dan de baja en la gesti\u00f3n de staff.",
+                "summary": "Eliminar mi cuenta",
+                "tags": [
+                    "Cuenta"
+                ],
+                "parameters": [
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Eliminamos tu cuenta y tus datos."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Las cuentas de staff se dan de baja desde la gesti\u00f3n de staff."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "user.show",
+                "responses": {
+                    "200": {
+                        "description": "`UserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
             }
         },
         "/sessions": {
@@ -562,6 +1293,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -588,6 +1338,25 @@
                 "responses": {
                     "204": {
                         "description": "No content"
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -705,6 +1474,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -718,6 +1506,25 @@
                 "responses": {
                     "204": {
                         "description": "No content"
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -800,6 +1607,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
@@ -856,6 +1682,25 @@
                                         "message": {
                                             "type": "string",
                                             "const": "La verificaci\u00f3n en dos pasos no est\u00e1 activa."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
                                         }
                                     },
                                     "required": [
@@ -1180,6 +2025,25 @@
                                         "message": {
                                             "type": "string",
                                             "const": "No fue posible guardar la foto."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
                                         }
                                     },
                                     "required": [
@@ -1549,6 +2413,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
@@ -1646,9 +2529,7 @@
                                             "properties": {
                                                 "universities": {
                                                     "type": "array",
-                                                    "items": {
-                                                        "type": "integer"
-                                                    }
+                                                    "items": {}
                                                 },
                                                 "career": {
                                                     "type": [
@@ -1658,9 +2539,7 @@
                                                 },
                                                 "interests": {
                                                     "type": "array",
-                                                    "items": {
-                                                        "type": "integer"
-                                                    }
+                                                    "items": {}
                                                 }
                                             },
                                             "required": [
@@ -1706,9 +2585,7 @@
                                             "properties": {
                                                 "universities": {
                                                     "type": "array",
-                                                    "items": {
-                                                        "type": "integer"
-                                                    }
+                                                    "items": {}
                                                 },
                                                 "career": {
                                                     "type": [
@@ -1718,9 +2595,7 @@
                                                 },
                                                 "interests": {
                                                     "type": "array",
-                                                    "items": {
-                                                        "type": "integer"
-                                                    }
+                                                    "items": {}
                                                 }
                                             },
                                             "required": [
@@ -1796,9 +2671,7 @@
                                             "properties": {
                                                 "universities": {
                                                     "type": "array",
-                                                    "items": {
-                                                        "type": "integer"
-                                                    }
+                                                    "items": {}
                                                 },
                                                 "career": {
                                                     "type": [
@@ -1808,9 +2681,7 @@
                                                 },
                                                 "interests": {
                                                     "type": "array",
-                                                    "items": {
-                                                        "type": "integer"
-                                                    }
+                                                    "items": {}
                                                 }
                                             },
                                             "required": [
@@ -2022,6 +2893,25 @@
                                     "required": [
                                         "message",
                                         "code"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -2425,19 +3315,35 @@
                         }
                     },
                     "429": {
-                        "description": "",
+                        "description": "Too many requests",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Est\u00e1s enviando demasiadas im\u00e1genes. Espera un momento."
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Est\u00e1s enviando demasiadas im\u00e1genes. Espera un momento."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Error overview."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
                                         }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -2547,6 +3453,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
@@ -2582,6 +3507,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -2612,6 +3556,25 @@
                             "application/json": {
                                 "schema": {
                                     "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
                                 }
                             }
                         }
@@ -2886,6 +3849,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
@@ -3096,6 +4078,25 @@
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -3477,6 +4478,25 @@
                             }
                         }
                     },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
                     },
@@ -3731,7 +4751,7 @@
         "/groups/{group}/members/me": {
             "delete": {
                 "operationId": "groups.members.destroy",
-                "summary": "Salir del grupo. Si se va el \u00faltimo administrador, el integrante m\u00e1s antiguo toma su lugar; el \u00fanico\nintegrante no puede salir, tiene que borrar el grupo",
+                "summary": "Salir del grupo. Si se va el \u00faltimo administrador, el integrante m\u00e1s antiguo toma su lugar. El \u00fanico\nintegrante de un grupo de alumnos no puede salir, tiene que borrarlo; en uno oficial s\u00ed puede, porque el\ngrupo es del staff y el estudiante no lo puede borrar",
                 "tags": [
                     "Grupos"
                 ],
@@ -4710,19 +5730,218 @@
                 }
             }
         },
-        "/user": {
+        "/admin/reports": {
             "get": {
-                "operationId": "user.show",
+                "operationId": "admin.reports.index",
+                "summary": "Cola de reportes (`status=pending`, por defecto, del m\u00e1s antiguo al m\u00e1s nuevo), historial de\nresueltos o descartados (del m\u00e1s reciente al m\u00e1s antiguo) o todos (`status=all`, del m\u00e1s nuevo al\nm\u00e1s antiguo). `user_id` filtra los de un reportado y `reason`, por motivo",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "pending",
+                                "reviewed",
+                                "dismissed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/ReportReason"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "`UserResource`",
+                        "description": "Paginated set of `AdminReportResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/UserResource"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminReportResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/reports/{report}": {
+            "get": {
+                "operationId": "admin.reports.show",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "report",
+                        "in": "path",
+                        "required": true,
+                        "description": "The report ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AdminReportResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminReportResource"
                                         }
                                     },
                                     "required": [
@@ -4731,6 +5950,563 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin.reports.update",
+                "summary": "Resuelve (`reviewed`) o descarta (`dismissed`) un reporte pendiente. Con `suspend: true`, al\nresolverlo tambi\u00e9n suspende la cuenta del reportado y cierra sus sesiones",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "report",
+                        "in": "path",
+                        "required": true,
+                        "description": "The report ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReviewReportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminReportResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminReportResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "operationId": "admin.users.index",
+                "summary": "Lista y busca cuentas. `search` busca en el nombre y el correo; `status` filtra activas o\nsuspendidas; `sort=reports` pone primero a quien tiene m\u00e1s reportes pendientes",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "active",
+                                "suspended"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/UserRole"
+                        }
+                    },
+                    {
+                        "name": "university_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "name",
+                                "reports",
+                                "newest"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `AdminUserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminUserResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}": {
+            "get": {
+                "operationId": "admin.users.show",
+                "summary": "Detalle de una cuenta: perfil, reportes recibidos (los 20 m\u00e1s recientes) e historial de moderaci\u00f3n",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminUserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "profile",
+                                                        "reports",
+                                                        "moderation_history"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin.users.destroy",
+                "summary": "Elimina una cuenta de estudiante con todos sus datos (T-23, RF-16). Mismas reglas que suspender: el\nmoderador debe indicar un reporte sobre esa cuenta (`report_id`) y el motivo es obligatorio. La\neliminaci\u00f3n queda en `moderation_actions` con el id de la cuenta; el reporte se borra con ella, por\neso su id se copia al final del motivo. No se puede deshacer",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 1000
+                        }
+                    },
+                    {
+                        "name": "report_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Eliminamos la cuenta y sus datos."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}/suspend": {
+            "post": {
+                "operationId": "admin.users.suspend",
+                "summary": "Suspende una cuenta de estudiante y cierra sus sesiones. El moderador debe indicar un reporte sobre\nesa cuenta (`report_id`); para el administrador es opcional. Si el reporte segu\u00eda pendiente, queda\nresuelto con el mismo motivo",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    },
+                                    "report_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminUserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "profile",
+                                                        "reports",
+                                                        "moderation_history"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}/reactivate": {
+            "post": {
+                "operationId": "admin.users.reactivate",
+                "summary": "Reactiva una cuenta de estudiante suspendida. Puede volver a iniciar sesi\u00f3n",
+                "tags": [
+                    "Administraci\u00f3n"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminUserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "profile",
+                                                        "reports",
+                                                        "moderation_history"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -4909,6 +6685,438 @@
                     "created_at"
                 ],
                 "title": "AdminGroupResource"
+            },
+            "AdminReportResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "enum": [
+                            "acoso",
+                            "perfil_falso",
+                            "contenido_inapropiado",
+                            "spam",
+                            "otro"
+                        ]
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "reviewed",
+                            "dismissed"
+                        ]
+                    },
+                    "university": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "short_name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "short_name"
+                        ]
+                    },
+                    "reporter": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "`null` si quien report\u00f3 ya borr\u00f3 su cuenta: el reporte se conserva.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "email"
+                        ]
+                    },
+                    "reported": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string"
+                            },
+                            "suspended": {
+                                "type": "boolean"
+                            },
+                            "suspended_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "reports_count": {
+                                "type": "integer",
+                                "description": "Cu\u00e1ntos reportes ha recibido en total, para ver si es reincidente."
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "email",
+                            "suspended",
+                            "suspended_at",
+                            "reports_count"
+                        ]
+                    },
+                    "match_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "reviewed_by": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "reviewed_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "reason",
+                    "description",
+                    "status",
+                    "university",
+                    "reporter",
+                    "reported",
+                    "match_id",
+                    "reviewed_by",
+                    "reviewed_at",
+                    "created_at"
+                ],
+                "title": "AdminReportResource"
+            },
+            "AdminUserResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "student",
+                            "moderator",
+                            "admin"
+                        ]
+                    },
+                    "university": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "short_name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "short_name"
+                        ]
+                    },
+                    "email_verified": {
+                        "type": "boolean"
+                    },
+                    "suspended": {
+                        "type": "boolean"
+                    },
+                    "suspended_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "reports_count": {
+                        "type": "integer"
+                    },
+                    "pending_reports_count": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "profile": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "career": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "semester": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "bio": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "completed": {
+                                "type": "boolean"
+                            },
+                            "photos": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "position": {
+                                            "type": "integer"
+                                        },
+                                        "temporary_url": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "position",
+                                        "temporary_url"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "career",
+                            "semester",
+                            "bio",
+                            "completed",
+                            "photos"
+                        ]
+                    },
+                    "reports": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "reason": {
+                                    "type": "string",
+                                    "enum": [
+                                        "acoso",
+                                        "perfil_falso",
+                                        "contenido_inapropiado",
+                                        "spam",
+                                        "otro"
+                                    ]
+                                },
+                                "description": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "enum": [
+                                        "pending",
+                                        "reviewed",
+                                        "dismissed"
+                                    ]
+                                },
+                                "reporter": {
+                                    "type": [
+                                        "object",
+                                        "null"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                },
+                                "created_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "reason",
+                                "description",
+                                "status",
+                                "reporter",
+                                "created_at"
+                            ]
+                        }
+                    },
+                    "moderation_history": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "action": {
+                                    "type": "string",
+                                    "enum": [
+                                        "suspend_user",
+                                        "reactivate_user",
+                                        "delete_user",
+                                        "approve_group",
+                                        "reject_group",
+                                        "create_staff",
+                                        "deactivate_staff",
+                                        "resolve_report",
+                                        "dismiss_report"
+                                    ]
+                                },
+                                "reason": {
+                                    "type": "string"
+                                },
+                                "report_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "actor": {
+                                    "type": [
+                                        "object",
+                                        "null"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                },
+                                "created_at": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "action",
+                                "reason",
+                                "report_id",
+                                "actor",
+                                "created_at"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "role",
+                    "university",
+                    "email_verified",
+                    "suspended",
+                    "suspended_at",
+                    "reports_count",
+                    "pending_reports_count",
+                    "created_at"
+                ],
+                "title": "AdminUserResource"
             },
             "DiscoveryCardResource": {
                 "type": "object",
@@ -5542,6 +7750,27 @@
                         "type": "string",
                         "description": "Pol\u00edtica del proyecto (AppServiceProvider): m\u00ednimo 8, letras, may\u00fasculas, min\u00fasculas y n\u00fameros."
                     },
+                    "accept_privacy": {
+                        "description": "Aviso de privacidad y normas de comunidad (T-23, RF-04). Por ahora opcionales para no romper la\napp mientras agrega las casillas; si vienen, tienen que estar aceptados y se guarda la fecha.",
+                        "enum": [
+                            "yes",
+                            "on",
+                            "1",
+                            1,
+                            "true",
+                            true
+                        ]
+                    },
+                    "accept_rules": {
+                        "enum": [
+                            "yes",
+                            "on",
+                            "1",
+                            1,
+                            "true",
+                            true
+                        ]
+                    },
                     "password_confirmation": {
                         "type": "string"
                     }
@@ -5608,6 +7837,31 @@
                     "password_confirmation"
                 ],
                 "title": "ResetPasswordRequest"
+            },
+            "ReviewReportRequest": {
+                "type": "object",
+                "description": "Resolver o descartar un reporte (T-37, RF-15). Siempre con motivo, para la bit\u00e1cora. Solo un reporte\nresuelto puede suspender al reportado en el mismo paso.",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "reviewed",
+                            "dismissed"
+                        ]
+                    },
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 1000
+                    },
+                    "suspend": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "status",
+                    "reason"
+                ],
+                "title": "ReviewReportRequest"
             },
             "SessionResource": {
                 "type": "object",
@@ -5986,6 +8240,29 @@
                     "profile_completed": {
                         "type": "boolean",
                         "description": "Si es `false`, la app manda al estudiante a terminar su perfil antes de usarla (T-49).\nEl staff no tiene perfil social, as\u00ed que para \u00e9l siempre es `true`."
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Celular verificado para recuperar la contrase\u00f1a por SMS (T-45). Este recurso solo lo ve la propia cuenta."
+                    },
+                    "phone_verified": {
+                        "type": "boolean"
+                    },
+                    "privacy_accepted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Cu\u00e1ndo acept\u00f3 el aviso de privacidad y las normas de comunidad (T-23, RF-04). Si son `null`, la\napp le pide aceptarlos con POST /api/legal/accept."
+                    },
+                    "rules_accepted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -5995,9 +8272,23 @@
                     "email_verified_at",
                     "role",
                     "university_id",
-                    "profile_completed"
+                    "profile_completed",
+                    "phone",
+                    "phone_verified",
+                    "privacy_accepted_at",
+                    "rules_accepted_at"
                 ],
                 "title": "UserResource"
+            },
+            "UserRole": {
+                "type": "string",
+                "description": "Roles de las cuentas (users.role). El registro p\u00fablico solo crea estudiantes; el staff lo crea un administrador (RF-22). Ver docs/base-de-datos/esquema.md, secci\u00f3n 3.\n",
+                "enum": [
+                    "student",
+                    "moderator",
+                    "admin"
+                ],
+                "title": "UserRole"
             },
             "ZoneResource": {
                 "type": "object",
