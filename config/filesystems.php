@@ -61,6 +61,9 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
+            // Carpeta dentro del bucket. Sirve para que dos entornos compartan bucket sin mezclar archivos
+            // (producción usa `produccion`). Vacía, los archivos van a la raíz, como hasta ahora.
+            'root' => env('AWS_ROOT', ''),
             'visibility' => 'private',
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
